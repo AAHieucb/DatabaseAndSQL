@@ -1,0 +1,23 @@
+-> So sánh 2 strings trong SQL, dùng = nhanh hơn LIKE vì LIKE nó phải interpret wildcard để ss. Chỉ dùng LIKE khi bắt buộc tìm 1 phần string
+
+-> Cte bảng tạm là kỹ thuật tối ưu trong SQL nên dùng khi không thể viết khéo để query bảng 1 lần. Nguyên tắc là kbh được viết query cùng 1 thứ nhiều lần mà phải tối ưu. VD:
+WITH AppTemp AS (
+  SELECT PowerAppId, IsSubmitted, ModifiedTime, CreateTime
+  FROM [xxxxxxxxxxxxxxx].[PowerAppRenewNotificationFeedbackVerify]
+  WHERE PowerAppId IN ('xxxxxxxxxxxxxxxxxxxx')
+)
+SELECT Y.PowerAppId FROM 
+(SELECT PowerAppId, ModifiedTime FROM AppTemp WHERE IsSubmitted = 1) as Y
+INNER JOIN 
+(SELECT Max(Greatest(CreateTime, ModifiedTime)) as maxTime, PowerAppId FROM AppTemp GROUP BY PowerAppId) as X
+On X.PowerAppId = Y.PowerAppId AND X.maxTime = Y.ModifiedTime
+=> Đánh index PowerAppId nx là được
+
+
+
+#***So sánh PostgreSQL, MySQL, SQL Server
+PostgreSQL tuân thủ nghiêm ngặt chuẩn SQL, trong khi MySQL thường linh hoạt hơn và có thể không đúng chuẩn.
+PostgreSQL có nhiều tính năng cao cấp như kiểm soát đồng thời cao và hỗ trợ các kiểu dữ liệu phức tạp hơn nên dùng cho các ứng dụng có tải công việc lớn. MySQL thường được sử dụng cho các ứng dụng web nhỏ và trung bình với tốc độ truy cập cao, MySQL có cộng đồng mã nguồn mở hỗ trợ nên nó cũng phổ biến hơn, dễ dùng hơn.
+SQL Server của Microsoft cũng mạnh như Postgre và phù hợp với các công cụ quản lý của Microsoft nhưng chi phí cao.
+
+
