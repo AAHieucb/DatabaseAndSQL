@@ -1,10 +1,7 @@
 ﻿-- Câu lệnh trigger
 
 -- AFTER trigger
--- Tình huống giả sử ta muốn mỗi khi bảng production.products được insert or delete dữ liệu thì dữ liệu đó sẽ được 
--- lưu lại hết trong 1 bảng mới có tên là production.product_audits => cái này có vai trò như là ghi lại lịch sử vậy
--- bảng production.product_audits có mọi thứ của production.products nhưng thêm 3 trường thể hiện sự update là change_id 
--- là update id nào, updated_at ghi lại thời gian được update và operation là update như thế nào
+-- Tình huống giả sử ta muốn mỗi khi bảng production.products được insert or delete dữ liệu thì dữ liệu đó sẽ được lưu lại hết trong 1 bảng mới có tên là production.product_audits => cái này có vai trò như là ghi lại lịch sử vậy bảng production.product_audits có mọi thứ của production.products nhưng thêm 3 trường thể hiện sự update là change_id  là update id nào, updated_at ghi lại thời gian được update và operation là update như thế nào
 CREATE TABLE production.product_audits(
     change_id INT IDENTITY PRIMARY KEY,
     product_id INT NOT NULL,
@@ -25,8 +22,7 @@ AFTER INSERT, DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-	-- Khi chạy 1 trigger sẽ trả kết quả là số lượng row bị ảnh hưởng. Ta muốn tắt cái này để trả về 1 cái khác thì
-	-- chạy SET NOCOUNT ON để tùy ý ta
+	-- Khi chạy 1 trigger sẽ trả kết quả là số lượng row bị ảnh hưởng. Ta muốn tắt cái này để trả về 1 cái khác thì chạy SET NOCOUNT ON để tùy ý ta
     INSERT INTO production.product_audits(
         product_id, 
         product_name,
@@ -48,8 +44,7 @@ BEGIN
         'INS'
     FROM
         inserted i
-    UNION ALL-- Vì ta muốn thực hiện gộp cả delete và insert nên làm như này. Khi ta insert thì bảng deleted sẽ là rỗng thì
-	-- gọi union hiển nhiên lấy toàn giá trị của bảng inserted nên k sao, ngược lại khi delete
+    UNION ALL-- Vì ta muốn thực hiện gộp cả delete và insert nên làm như này. Khi ta insert thì bảng deleted sẽ là rỗng thì gọi union hiển nhiên lấy toàn giá trị của bảng inserted nên k sao, ngược lại khi delete
     SELECT
         d.product_id,
         product_name,
@@ -102,10 +97,10 @@ CREATE VIEW production.vw_brands
 AS
 SELECT
     brand_name,
-    'Approved' approval_status -- mặc định giá trị là Approved cho trường approval_status
+    'Approved' approval_status -- Mặc định giá trị là Approved cho trường approval_status
 FROM
     production.brands
-UNION --hợp 2 bảng lại
+UNION -- Hợp 2 bảng lại
 SELECT
     brand_name,
     'Pending Approval' approval_status
@@ -135,23 +130,22 @@ BEGIN
                 production.brands
         );
 	-- Ta lọc 1 brand mới thêm mà k thuộc các brand đã có trong production.brands thì thêm vào brand_approvals
-	-- nếu đã có trong brands thì đơn giản chả insert gì cả vì nó NULL
+    -- Nếu đã có trong brands thì đơn giản chả insert gì cả vì nó NULL
 END
 GO
---Thêm dữ liệu vào view
+-- Thêm dữ liệu vào view
 INSERT INTO production.vw_brands(brand_name)
 VALUES('Eddy Merckx');
 
---xem các thứ trong view
+-- Xem các thứ trong view
 SELECT brand_name, approval_status FROM production.vw_brands;
---xem các thứ đang pending
+-- Xem các thứ đang pending
 SELECT * FROM production.brand_approvals;
 
 DROP TRIGGER production.trg_vw_brands 
 DROP VIEW production.vw_brands
 DROP TABLE production.brand_approvals
--- Ta có thể làm đơn giản hơn là tạo ra 1 trường mới trong table xác định approved hay chưa approved nhưng ở đây chia 2 bảng để
--- học thôi chứ chả ai làm v cả
+-- Ta có thể làm đơn giản hơn là tạo ra 1 trường mới trong table xác định approved hay chưa approved nhưng ở đây chia 2 bảng để học thôi chứ chả ai làm v cả
 
 -- TRIGGER có ROLLBACK
 GO

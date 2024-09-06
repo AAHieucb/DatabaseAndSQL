@@ -5,10 +5,10 @@ SELECT
 FROM
     production.products
 WHERE
-    list_price > ( -- truy vấn con luôn nằm trong (), truy vấn cha chứa truy vấn con
+    list_price > ( -- Truy vấn con luôn nằm trong (), truy vấn cha chứa truy vấn con
         SELECT
-            AVG (list_price) -- dùng thoải mái các hàm. Cái này không trả ra 1 table mà ra đúng 1 số là tb list_price mọi
-			-- sản phẩm trong data trả ra và so sánh với list_price
+            AVG (list_price) -- Dùng thoải mái các hàm. Cái này không trả ra 1 table mà ra đúng 1 số là tb list_price mọi
+			-- Sản phẩm trong data trả ra và so sánh với list_price
         FROM
             production.products
         WHERE
@@ -32,7 +32,7 @@ WHERE
     )
 ORDER BY
     list_price
--- query con thứ 2 trả ra 1 table các trung bình cộng từng nhóm
+-- Query con thứ 2 trả ra 1 table các trung bình cộng từng nhóm
 
 SELECT
     customer_id,
@@ -40,7 +40,7 @@ SELECT
     last_name,
     city
 FROM
-    sales.customers c --đặt tên ở ngoài dùng được ở trong
+    sales.customers c -- Đặt tên ở ngoài dùng được ở trong
 WHERE
     EXISTS (
     -- VD dùng not exist tức là lấy các thông số trên nếu bản ghi bên dưới k có giá trị nào. Điều này tương đương với 
@@ -112,7 +112,7 @@ GO
 INSERT INTO test1 VALUES('HH',1)
 SELECT * FROM test1
 SELECT * FROM test
-INSERT INTO test VALUES('TT', 2) -- view gắn với chỉ 1 table thì có thể thêm data vào table bằng cách thêm vào view 
+INSERT INTO test VALUES('TT', 2) -- View gắn với chỉ 1 table thì có thể thêm data vào table bằng cách thêm vào view 
 DROP TABLE test1
 DROP VIEW test
 

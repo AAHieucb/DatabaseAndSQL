@@ -21,8 +21,7 @@ GRANT ALL ON sales.contacts TO hieu WITH GRANT OPTION;
 
 -- Cú pháp thu quyền: REVOKE <privilege list> ON <database element> FROM <user list> [CASCADE| RESTRICT] ;
 REVOKE ALL ON sales.contacts FROM hieu CASCADE;
--- Với CASCADE là xóa bỏ mọi quyền được granted chỉ vì revoked privileges. Còn RESTRICT là revoke sẽ k thực thiện nếu quyền
--- revoked được trao cho những người khác r, kiểu báo lỗi sai ấy
+-- Với CASCADE là xóa bỏ mọi quyền được granted chỉ vì revoked privileges. Còn RESTRICT là revoke sẽ k thực thiện nếu quyền revoked được trao cho những người khác r, kiểu báo lỗi sai ấy
 
 -- Để revoke grant option phải dùng riêng
 REVOKE GRANT OPTION FOR SELECT ON sales.contacts FROM hieu CASCADE;
@@ -30,7 +29,7 @@ REVOKE GRANT OPTION FOR SELECT ON sales.contacts FROM hieu CASCADE;
 CREATE USER user_name FOR LOGIN hieu;
 DROP USER IF EXISTS user_name  
 
---lệnh tạo login mới có password, chứ user làm gi có password nx. Xong từ đây bên dưới có thể tạo tiếp user từ login này
+-- Lệnh tạo login mới có password, chứ user làm gi có password nx. Xong từ đây bên dưới có thể tạo tiếp user từ login này
 CREATE LOGIN NewAdminName WITH PASSWORD = 'ABCD'
 GO
 DROP LOGIN NewAdminName

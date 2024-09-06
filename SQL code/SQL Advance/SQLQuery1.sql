@@ -1,6 +1,4 @@
-﻿-- Basic/Các câu lệnh cơ bản
-
-SELECT ISNULL('freetuts.net', 'myfreetuts.net'); -- Nếu 1 là NULL trả ra 2, nếu 1 khác NULL sẽ trả ra 1
+﻿SELECT ISNULL('freetuts.net', 'myfreetuts.net'); -- Nếu 1 là NULL trả ra 2, nếu 1 khác NULL sẽ trả ra 1
 
 SELECT ISNUMERIC('1234'); -- Số k hợp lệ sẽ ra 0
 SELECT ISNUMERIC(1234);
@@ -29,7 +27,7 @@ SELECT TRY_CONVERT(varchar, 15.6); -- Thất bại ra NULL
 SELECT TRY_CAST('14 Main St.' AS float); -- Thất bại trả ra NULL
 SELECT CONVERT(float, '15.6'); -- Thất bại trả ra error
 SELECT CAST('2019-04-06' AS datetime); -- Cast dữ liệu trong SQL, thất bại sẽ trả ra error
---SELECT CAST(15.6 AS varchar(2));
+-- SELECT CAST(15.6 AS varchar(2));
 SELECT CAST(15.6 AS varchar);
 
 SELECT YEAR('2018/04/06 15:05'); -- Chỉ ra năm. thất bại sẽ trả lỗi
@@ -40,8 +38,7 @@ SELECT DATENAME(millisecond, '2019/04/06 08:45:12.726'); -- 1 phần của ngày
 
 SELECT DATEDIFF(minute, '2019/04/06 05:00', '2019/01/25 15:45'); -- 2 ngày chênh nhau 1 khoảng -101595 phút
 
-SELECT DATEADD(year, 3, '2019/04/06'); -- 1 là đơn vị, 2 là số lượng, 3 là thêm vào ngày nào. Có thể thêm khá tự do như
--- yy, yyyy, year đều được, quater/q/qq là thêm theo đơn vị quý
+SELECT DATEADD(year, 3, '2019/04/06'); -- 1 là đơn vị, 2 là số lượng, 3 là thêm vào ngày nào. Có thể thêm khá tự do như yy, yyyy, year đều được, quater/q/qq là thêm theo đơn vị quý
 SELECT DATEADD(day, -5, '2019/04/06'); -- dy,y đều được
 
 SELECT GETUTCDATE(); -- Như nhau
@@ -80,9 +77,7 @@ SELECT STUFF('Freetuts.net', 5, 4, 'tutorial'); -- Hàm rất mạnh thao tác v
 
 SELECT SUBSTRING('Freetuts.net', 10, 3); -- Vị trí bắt đầu lấy và số lượng. Số âm sẽ lỗi
 
-SELECT STR(-123.5, 5, 1); -- Chuyển số thành chuỗi, 2 là length k bắt buộc độ dài bao gồm cả dấu và chữ số thập phân, mặc định
--- là 10; 3 là số lượng vị trí thập phân hiển thị ở chuỗi kết quả, k đc quá 16, nếu k chỉ định sẽ là 0. VD ở đây ta có số dài
--- hơn 5 ký tự -12345.5 sẽ sai hay 5 ký tự -1234.5 sẽ tự làm tròn bỏ phần thập phân
+SELECT STR(-123.5, 5, 1); -- Chuyển số thành chuỗi, 2 là length k bắt buộc độ dài bao gồm cả dấu và chữ số thập phân, mặc định là 10; 3 là số lượng vị trí thập phân hiển thị ở chuỗi kết quả, k đc quá 16, nếu k chỉ định sẽ là 0. VD ở đây ta có số dài hơn 5 ký tự -12345.5 sẽ sai hay 5 ký tự -1234.5 sẽ tự làm tròn bỏ phần thập phân
 
 SELECT SPACE(10);
 

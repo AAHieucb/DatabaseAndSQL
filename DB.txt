@@ -1,0 +1,38 @@
+## SQL
+-> Dùng lazy query tới DB để khi nào dùng mới load.
+
+-> Migration update database khi đang có data
+Quản lý version migration
+
+-> Backup full db hay backup sự thay đổi.
+Khôi phục db
+
+-> Constraints và relational các bảng
+Xử lý khi xoá và update các data relation
+
+-> User login phân quyền
+
+-> Procedure, trigger và function trong db
+Dùng cursor
+
+-> Dùng transaction
+Custom level of locking
+
+-> Đánh index, tối ưu hoá đánh index
+
+-> Functional dependency
+
+-> Cách design quan hệ các bảng
+
+-> Tạo và đồng bộ replica
+
+-> Dùng bảng tạm, cte, biến table
+Lấy data bảng này cho vào bảng khác
+
+-> Query data phức tạp giữa các bảng
+
+-> Connect DB vào ứng dụng 
+
+-> Thiết kế database tối ưu
+
+-> Partition database

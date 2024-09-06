@@ -1,6 +1,4 @@
-﻿-- Câu lệnh table/contraints thường dùng
-
--- Tạo foreign key bằng constraint.
+﻿-- Tạo foreign key bằng constraint.
 -- Cách 1 bình thường
 CREATE SCHEMA procurement;
 go
@@ -48,7 +46,7 @@ DROP TABLE IF EXISTS BikeStores.procurement.vendors, procurement.vendor_groups;
 DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (c INT NULL, d INT NULL DEFAULT 0);
 INSERT INTO t1 
-	VALUES (1, 0),(2, 0),(3, 0); -- éo hiểu sao default vẫn phải truyền, nếu k sẽ báo lỗi. Chắc vì đây là insert nhiều giá trị
+	VALUES (1, 0),(2, 0),(3, 0); -- Éo hiểu sao default vẫn phải truyền, nếu k sẽ báo lỗi. Chắc vì đây là insert nhiều giá trị
 ALTER TABLE t1 ALTER COLUMN c VARCHAR(2); -- ok
 INSERT INTO t1 VALUES ('@', 0);
 -- ALTER TABLE t1 ALTER COLUMN c INT; -- lỗi vì k cast @ về int được nhưng cast string '1' '2' '3' về varchar(2) được
@@ -59,7 +57,7 @@ ALTER TABLE t1 ALTER COLUMN c VARCHAR (20) NOT NULL;
 ALTER TABLE t1 DROP COLUMN c;
 DROP TABLE t1;
 
---khi xóa 1 column có constraint thì phải DROP CONSTRAINT trước r mới DROP COLUMN
+-- Khi xóa 1 column có constraint thì phải DROP CONSTRAINT trước r mới DROP COLUMN
 CREATE TABLE sales.price_lists(
     valid_from DATE,
     price DEC(10,2) NOT NULL CONSTRAINT ck_positive_price CHECK(price >= 0),
@@ -72,9 +70,7 @@ DROP COLUMN price, valid_from;
 -- Xóa column mà là primary key or foreign key thì báo lỗi ngay nên foreign key phải rời sang trường khác trc r ms xóa(ràng buộc toàn vẹn)
 
 
--- Basic/Câu lệnh hệ thống
-/* SQL Server k cung cấp câu lệnh đổi tên table nhưng có 1 thủ tục lưu trữ global là sp_rename có thể dùng để đổi tên bảng
-bằng cách exec thủ tục đó. Tên cũ và mới đều phải đặt trong dấu nháy đơn */
+/* SQL Server k cung cấp câu lệnh đổi tên table nhưng có 1 thủ tục lưu trữ global là sp_rename có thể dùng để đổi tên bảng bằng cách exec thủ tục đó. Tên cũ và mới đều phải đặt trong dấu nháy đơn */
 EXEC sp_rename 'sales.price_lists', 'price_groups'
 -- Chú ý old_name có schema, còn new_name k có schema vì mặc định chơi trong schema kia
 -- Vc đổi tên sẽ ảnh hưởng đến khóa ngoại của các table khác trỏ đến table này nhưng SQL Server tự động cập nhập nên kp lo
@@ -86,7 +82,7 @@ TRUNCATE TABLE sales.price_groups;
 DROP TABLE sales.price_groups;
 
 -- Câu lệnh table/constraints thường dùng
--- dùng constraint UNIQUE
+-- Dùng constraint UNIQUE
 CREATE TABLE persons(
     person_id INT IDENTITY PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,

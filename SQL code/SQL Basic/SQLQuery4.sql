@@ -15,10 +15,9 @@ INNER JOIN production.categories c
     ON c.category_id = p.category_id
 ORDER BY
     product_name DESC;
-/*VD: A có 1,2,3 và B có X,Y,Z thì dùng như cách đầu sẽ ra 9 giá trị do nó lấy tích đề các. Còn dùng như cách 2 mới là chuẩn vì
-nó lấy ở 2 bảng lọc ra trùng trường nào mới lấy. Do đó cách 1 ta thấy có 2 trường trùng nhau là category_id vì nó k compare gì hết
-VD nó ra 2X và 3Y
-Nhưng left join sẽ cho ra 1NULL, 2X và 3Y
+/*
+VD: A có 1,2,3 và B có X,Y,Z thì dùng như cách đầu sẽ ra 9 giá trị do nó lấy tích đề các. Còn dùng như cách 2 mới là chuẩn vì nó lấy ở 2 bảng lọc ra trùng trường nào mới lấy. Do đó cách 1 ta thấy có 2 trường trùng nhau là category_id vì nó k compare gì hết
+VD nó ra 2X và 3Y Nhưng left join sẽ cho ra 1NULL, 2X và 3Y
 */
 
 -- Join 3 bảng
@@ -58,7 +57,7 @@ FROM
         ON o.order_id = i.order_id
 ORDER BY
     order_id;
---Ở đây nó left join products và order_items thành 1 bảng tạm xong lại left join bảng tạm đó với order để ra kết quả
+-- Ở đây nó left join products và order_items thành 1 bảng tạm xong lại left join bảng tạm đó với order để ra kết quả
 
 -- Phân biệt dùng WHERE trong left join
 SELECT
@@ -73,9 +72,7 @@ ORDER BY
     order_id;
 -- => trả về kết quả trong bảng tạm bị lọc ra 
 
--- TH2 dùng điều kiện như WHERE nhưng lại trong ON của LEFT JOIN thì đầu tiên nó sẽ lọc các thứ ở bảng bên trái thỏa mãn điều kiện
--- đó. Sau đó nó lấy tất cả ở bảng bên trái. Do đó ra kết quả khác bên trên. Bên trên lấy hết r lọc nên k có NULL nx. Còn bên dưới
--- nó chỉ lọc điều kiện cho bảng bên trái trước r mới lấy tất cả ở bên trái, bước lấy tất cả bên trái đó nó k lọc gì nx nên có NULL
+-- TH2 dùng điều kiện như WHERE nhưng lại trong ON của LEFT JOIN thì đầu tiên nó sẽ lọc các thứ ở bảng bên trái thỏa mãn điều kiện đó. Sau đó nó lấy tất cả ở bảng bên trái. Do đó ra kết quả khác bên trên. Bên trên lấy hết r lọc nên k có NULL nx. Còn bên dưới nó chỉ lọc điều kiện cho bảng bên trái trước r mới lấy tất cả ở bên trái, bước lấy tất cả bên trái đó nó k lọc gì nx nên có NULL
 -- 1 cái join r lọc k null, 1 cái lọc r join sẽ null
 SELECT
     p.product_id,
@@ -119,7 +116,7 @@ WHERE employeesName IN
     FROM employees
     ORDER BY employeesName DESC); 
 
---muốn xóa 10 dòng đầu thì cx ok bằng cách chỉnh sửa phần delete
+-- Muốn xóa 10 dòng đầu thì cx ok bằng cách chỉnh sửa phần delete
 DELETE TOP(10) FROM employees
 
 DROP TABLE employees

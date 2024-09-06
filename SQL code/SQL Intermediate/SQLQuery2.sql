@@ -4,7 +4,7 @@ DECLARE @model_year SMALLINT,
 SET @model_year = 2018 + 3;
 
 DECLARE @product_count INT;
-SET @product_count = ( -- lệnh này trả ra số nguyên đúng kiểu mà biến lưu
+SET @product_count = ( -- Lệnh này trả ra số nguyên đúng kiểu mà biến lưu
     SELECT
         COUNT(*) 
     FROM
@@ -67,7 +67,7 @@ BEGIN
         model_year = @model_year;
 
     SELECT @product_count = @@ROWCOUNT;
-	IF @product_count <> 0 -- có thể lồng nhiều thoải mái
+	IF @product_count <> 0 -- Có thể lồng nhiều thoải mái
 		PRINT @product_count
 	ELSE 
 		PRINT 'No record found'

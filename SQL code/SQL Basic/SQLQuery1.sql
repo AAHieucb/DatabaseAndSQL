@@ -1,5 +1,4 @@
-﻿-- Basic/Các câu lệnh về hệ thống
-select @@version;
+﻿select @@version;
 
 
 -- Câu lệnh Database
@@ -85,7 +84,7 @@ WHERE
 ORDER BY
     first_name ASC;
 
--- dùng BETWEEN AND
+-- Dùng BETWEEN AND
 SELECT
     product_id,
     product_name,

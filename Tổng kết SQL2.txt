@@ -1,0 +1,237 @@
+# Query SELECT:
+LAG là query hàng trước hàng hiện tại trong câu SELECT nhiều kết quả, LEAD là query hàng sau hàng hiện tại
+ROW_NUMBER OVER + PARTITION BY: Chia nhóm các phần tử và thêm trường đếm số thứ tự trong từng nhóm
+Khi 1 câu query chỉ lấy 1 trường và chỉ có đúng 1 record thì sẽ dùng được như 1 giá trị hoặc 1 set nếu thích. VD ta có thể dùng = thay vì dùng = ANY()
+Phân biệt: a = ANY(list giá trị) và a IN (list element) là như nhau nhưng ANY có thể dùng với mọi toán tử > < !=
+GROUP BY + WHERE là lọc data rồi nhóm lại lấy từng GROUP khác với GROUP BY + HAVING là group lại thành từng nhóm và lọc data trong từng nhóm quyết định lấy group nào.
+=> Câu lệnh đầu tiên là câu lệnh quan trọng và là khởi nguồn. VD ta cần retrieve 10 trường từ 3 bảng khác nhau thì câu lệnh đầu 100% là SELECT 10 trường FROM 3 bảng JOIN với nhau còn JOIN thế nào tùy bài toán nhưng chắc chắn phải làm như v. 
+=> 3 lối tư duy cơ bản nên nghĩ tới đầu tiên khi gặp mọi dạng bài là cứ JOIN nó lại nếu nhiều bảng, GROUP BY nếu từng nhóm, query lồng nếu phức tạp
+
+-> SELECT phức tạp:
+C1: Tìm đối tượng a cần lấy -> liệt kê các ĐK mà a cần thỏa mãn -> mỗi ĐK SELECT ra 1 list các thứ thỏa mãn -> check WHERE của a có IN hay cần NOT IN cái cục ĐK ấy k
+C2: Tìm đối tượng a cần lấy -> Lấy từng cục SELECT lồng nhau chứa đối tượng a -> check xem cái chứa đối tượng a đó có thỏa mãn điều kiện cần tìm k
+VD C1: SELECT FROM WHERE a IN (list) AND NOT IN (list) -> 2 cái list là điều kiện 1 và 2
+VD C2: SELECT FROM a WHERE (SELECT FROM b WHERE B.id = A.id + condition lồng)
+
+VD tìm A thỏa mãn điều kiện gì đó ở bảng B: 
+C1: Tìm list a trong bảng B mà thỏa mãn điều kiện -> tìm xem a trong A thuộc list đó k
+C2: Tìm tất cả a trong A và check từng phần tử xem thỏa mãn điều kiện trong B không
+
+-> VD0: 1 bảng lecturer lưu thông tin giảng viên, 1 bảng lecture lưu thông tin môn nào được giảng viên nào dạy
+=> SELECT * FROM LECTURE as L1, LECTURE2 as L2 WHERE L1.StaffNO = L2.StaffNO
+=> SELECT * FROM LECTURER JOIN LECTURE ON LECTURER.StaffNO = LECTURE.StaffNO
+
+VD1: Khi nhiều bảng nối với nhau kèm điều kiện
+C1: SELECT COUNT(No_OfCopies) 
+FROM BOOK_COPIES a, BOOK b, LIBRARY_BRANCH c
+WHERE a.BookId = b.BookId AND a.BranchId = c.BranchId AND b.Title = 'The Lost Tribe' AND c.BranchName = 'Sharpstown'
+C2: SELECT COUNT(No_Of_Copies)
+FROM BOOK_COPIES
+WHERE (
+	BookId IN (SELECT BookId FROM BOOK WHERE Title = 'The Lost Tribe')
+	AND
+	BranchId IN (SELECT BranchId FROM LIBRARY_BRANCH WHERE BranchName = 'Sharpstown')
+)
+
+VD2: query lồng để lấy thông tin sinh viên có project được làm ở Houston
+SELECT FNAME, LNAME, ADDRESS 
+FROM EMPLOYEE e
+WHERE SSN IN (SELECT ESSN FROM WORKS_ON wo, PROJECT p WHERE wo.PNO = p.PNUMBER AND PLOCATION = 'Houston')
+=> Lấy tất cả các sinh viên làm việc ở Houston và check xem sv hiện tại có trong đó k
+
+VD3: Pb WHERE và AND
+SELECT FROM a LEFTJOIN b ON Condition WHERE C
+SELECT FROM a LEFTJOIN b ON Condition AND C
+C1: lấy mọi phần tử của a -> ghép với mọi phần tử của B thỏa mãn theo Condition và nếu k thỏa mãn thì các trường b đó sẽ là null -> lọc trên bảng đó điều kiện C. 
+C2: lấy toàn bộ phần tử của a -> ghép với các phần tử của b nếu thỏa mãn Condition và C, k có thì lấy null
+Example: a có 1X 2Y 3Z, b có Xa Yb Kc trường chữ hoa là name
+=> SELECT FROM a LEFTJOIN b ON a.name = b.name WHERE name = Y  -> cho ra 2Yb
+=> SELECT FROM a LEFTJOIN b ON a.name = b.name AND name = Y  -> cho ra 1Xnull, 2Yb, 3Znull
+
+VD4: Tìm mọi mã của phòng mà k có nhân viên nào có địa chỉ ở HN 
+NhanVien(MaNV, DiaChi, MaPh)
+Phong(MaPh, DiaChi)
+=> Nếu lấy mã phòng của mọi phòng r lại nested check mọi nhân viên phòng đó sống ở HN là NULL thì bị dài. Ta lấy mã phòng mà NOT IN tập mã phòng mà có sinh viên sống ở HN là đc
+SELECT MaPh FROM Phong WHERE MaPh NOT IN (SELECT MaPh FROM NhanVien WHERE DiaChi = 'Ha Noi')
+
+
+
+# Dùng transaction
+SQL thì mỗi lệnh là 1 trans và ta muốn gom nhiều câu lệnh làm 1 trans thì phải tự khai báo. 
+
+-> Cơ chế lock tx: Shared lock (LS) xử lý đọc, Exclusive lock(LX) xử lý ghi.
+Mặc định db lock khi có W+W cùng 1 nơi, còn W+R thì k. Lock trong db được thiết kế chuẩn và tối ưu. VD A chuyển tiền cho B thì phải lock A trước khi dùng A, lock B ngay trước khi dùng B để tối ưu tg lock, vì lock B ngay từ đầu là k cần thiết. Sau khi thay đổi A xong k được unlock A luôn mà phải chờ đến cuối vì B gặp lỗi bị hoàn tác thì revert A nữa
+=> Gọi là phantom transaction. Lỗi này thg gặp khi 1 trans ngắn, 1 trans dài lồng nhau.
+
+-> Isolation level là các mức độ sử dụng lock, để custom locking thay cho default
+4 trạng thái lỗi khi thực hiện 1 tx trong db (nên nhớ là đang xét 1 tx có đọc, có ghi):
+Dirty Reads: trans 1 đang update nhưng chưa committed, trans 2 vào read uncommitted data đó. Về sau trans 1 báo lỗi và ROLL BACK thì trans 2 lại thao tác với data lỗi đó nên sai.
+Lost Update: trans 1 update a = 100, trans 2 update a = 120 đồng thời. Thì giả sử tx2 thành công thì tx1 đã biến mất
+Non-repeatable Reads: trans 1 read 1 record 2 lần liên tiếp; trans 2 write vào record và lệnh write của trans 2 xen đúng giữa 2 lệnh read của trans 1 => trans 1 read 2 lần liên tiếp nhưng lại cho kết quả khác nhau nên là non-repeatable
+Phantom Reads: trans 1 thực hiện 2 lần cùng 1 lệnh read có điều kiện trên 1 tập hợp nhiều bản ghi và tx 2 update dữ liệu đó sao cho lần 2 tx 1 đọc lại ra giá trị khác vì ví dụ có thêm dữ liệu mới hoặc mất bớt dữ liệu cũ vì k thỏa mãn điều kiện chẳng hạn. Nó khác non-repeatable update ở chỗ là nó tính trên 1 tập hợp
+
+VD chống Non repeatable read vì Trans2 lúc write vào A trong lúc trans 1 thao tác với A bị cấm
+Trans1: Read/Write và lock(A), Read/Write và commit(A)
+Trans2: Write vào A
+
+-> 2 phase locking: thực hiện 1 tx sẽ lock từ từ đến khi cần dùng từng cái, đạt đỉnh sẽ release lock từ từ khi k cần dùng nữa
+strict 2 phase locking: tương tự lock từ từ, nhưng bước cuối chờ tx hoàn thành cả mới release hết 1 thể. Làm v mới ngăn được cả dirty read và non-repeatable read.
+
+-> 4 level isolation:
+Read Uncommitted: Chả làm gì cả và read hay write gì cứ tự nhiên lấy vào đúng thời điểm được gọi. Nó ăn cả 4 lỗi trên vì chả lock gì cả. Mới uncommitted đã read r
+Read Committed: level default của 1 transaction. Mặc định 1 trans k thể đọc dữ liệu từ 1 trans khác đang trong quá trình cập nhập dữ liệu mới mà phải đợi hoàn tất committed, tức là nó dùng lock on write. Chống được dirty reads thôi. K chống được non-repeatable vì nó chỉ khóa khi ghi chứ k khóa khi đọc.
+Repeatable Read: Là lock cả read và write ở đầu cuối mỗi lệnh đọc và ghi. Là kiểu dùng phổ biến nhất, nó chỉ k chống được phantom read.
+Serializable: cấp cao nhất chống mọi thứ. Khóa tất ở đầu cuối mỗi trans, thực hiện thành tuần tự cmnl. Thành chuỗi hoàn toàn cho mọi lệnh đọc ghi.
+
+-> Còn có partially committed: trạng thái commit từng phần chứ kp toàn bộ trans. VD ta tạo 1 trans là A->B->C là chuyển tiền liên thông 3 người, thì A->B xong partially committed rồi B->C lại partially committed => sau khi committed phần đầu tiên thì A được free và có thể sử dụng. Nếu ROLLBACK sẽ chỉ quay về lần partially committed cuối cùng.
+
+-> Transaction recovery: Log file được tạo khi tạo db sẽ lưu các actions để undo về sau. Bản chất nó k hoàn tác bằng cách thực hiện ngược lại mà chỉ lưu giá trị state lúc đó và gán giá trị ngược về state cũ thôi. Log file chỉ thực hiện lưu vào external mem khi gặp action flush log, do đó các bước thất bại trước khi flush log sẽ chả làm gì cả.
+VD khi trans bắt đầu thì viết vào log file <start T>. Trạng thái hiện tại A đổi từ 8 thành 16 thì log file lưu <T, A, 8> mà k cần qt logic, chỉ biết A = 8 là trạng thái trước đó
+
+--> Khi undo logging, nó scan mọi trans chưa hoàn thành để quay lại, tức là môi lần undo, nó sẽ undo mọi trans khác đi kèm mà chưa hoàn thành kể từ lúc cái trans sai này bắt đầu. Undo từng lệnh xong thì viết aborted vào các trans đó. Do đó nếu file lớn thì làm rất lâu vì xu hướng phình to dần => dùng <checkpoint> là để kbh search quá điểm này. 
+Còn có <start ckpt(T1, T2)> là scan từ dưới lên và nó đảm bảo rằng T1, T2 chắc chắn đã hoàn thành bên trên, cho nên từ điểm start đến <end cpkt>, chỉ cần tìm các trans kp là T1, T2 là các giá trị cần được cập nhập, làm v để giảm tải bỏ qua operation k cần thiết.
+=> Khi ghi, nó ghi log update trước khi update dữ liệu, còn commit thì phải commit data thực sự trước khi ghi log commit.
+
+--> Redo logging dùng nếu gặp sự cố như mất điện, hỏng ổ đĩa cần khôi phục các dữ liệu đã commit nhưng chưa kịp ghi lên data file thì sẽ update lại theo log. 
+Redo logging cũng chỉ là lưu giá trị mới VD <T, A, 16>. Nó có thêm <commit T> là new state của database là consistency. Lệnh này xác nhận data được cập nhập dù trans có thể chưa thực hiện xong. Còn nếu có error, nó sẽ quay lại consistent state gần nhất đã lưu chứ k quay lại từ đầu.
+=> Redo ghi thêm END record vào cuối khi update flush vào disk, mỗi lần redo xong tất cả trans thì cũng ghi end vào và nhận biết trans chưa update bằng cách k có end ở cuối nhưng lại có commit. Commit ở đây chỉ báo là nó đáng ra là đã update trên database rồi, k có end tức là bị lỗi và phải redo lại từ start đến commit ấy.
+
+-> Dùng IF NOT EXIST transaction
+CREATE TABLE IF NOT EXISTS -> Quá trình check và create table là 1tx
+
+Lệnh insert if not exist, nếu id đã tồn tại thì update data, kp là tx trong SQL. Buộc dùng tự dùng transaction thuần của sql:
+BEGIN TRAN
+  IF NOT EXISTS (SELECT 1 FROM [{scheme}].PowerPlatformConnection WITH (UPDLOCK,SERIALIZABLE) WHERE Id = @Id)
+  BEGIN
+    INSERT INTO [{scheme}].PowerPlatformConnection 
+      (Id,TenantId)
+    VALUES 
+      (@Id,@TenantId)
+  END
+COMMIT TRAN
+VD nhiều process chạy đồng thời lệnh trên. Mặc định cấp độ của DB là READ COMMITTED, nếu 2 giao dịch chạy đồng thời, tx1 chạy insert chưa committed, tx2 sẽ k thể đọc dữ liệu mới đó và vẫn pass qua if not exist và insert lần thứ 2. Giả sử k có unique key sẽ lỗi và 2 bản ghi sinh ra trùng nhau. 
+=> Phải kiểm soát với UPDLock hoặc SERIALIZABLE 
+
+Cơ chế UPDLock cản lost update: Khi 1 câu lệnh sử dụng UPDLock, nó sẽ cản mọi tx khác update bản ghi đó, nó cũng cản lost update bằng cách không cho tx khác select nếu "đọc để update". Nó có tác dụng trong phạm vi các bản ghi bị lock, còn update 1 bản ghi khác cùng bảng thì vẫn được. VD:
+TxA:
+BEGIN TRANSACTION;
+SELECT value FROM MyTable WITH (UPDLOCK) WHERE id = 1; -- Đặt UPDLOCK trên bản ghi với id = 1
+-- Giả sử giá trị hiện tại là 100
+UPDATE MyTable SET value = 110 WHERE id = 1; -- Cập nhật giá trị
+COMMIT;
+
+TxB: 
+BEGIN TRANSACTION;
+SELECT value FROM MyTable WHERE id = 1; -- Đọc bản ghi với id = 1
+-- Giao dịch B vẫn có thể đọc giá trị hiện tại (100 hoặc 110 tùy thuộc vào thời điểm)
+COMMIT;
+
+TxC:
+BEGIN TRANSACTION;
+SELECT value FROM MyTable WITH (UPDLOCK) WHERE id = 1; -- Đặt UPDLOCK trên bản ghi với id = 1
+-- Giao dịch C sẽ bị chặn tại đây nếu Giao dịch A chưa hoàn tất
+UPDATE MyTable SET value = 120 WHERE id = 1; -- Cập nhật giá trị
+COMMIT;
+=> Khi dùng khóa WITH ở bất cứ đâu trong 1 tx thì chỉ là nơi bắt đầu khóa thôi, sau đó nó sẽ khóa toàn bộ tx. VD ở đây ta dùng trong câu lệnh SELECT nhưng thực chất nó lock cả phần UPDATE, chỉ mở khi commit. VD đầu tiên WITH(UPDLOCK) là khóa hết tx khác can thiệp vào row đó, nên case đó chỉ cần dùng 1 trong 2 SERIALIZE hoặc UPDLOCK là đủ
+Còn có WITH(NOLOCK) override cả mặc định thành chả lock gì luôn. VD: SELECT column1, column2 FROM tableName WITH (NOLOCK) WHERE someCondition
+
+
+
+# Normalization tối ưu design DB
+Normalization k giúp query nhanh hơn vì muốn lấy data có thể phải join nhiều table hơn nhưng giúp tối ưu bộ nhớ, làm data k bị trùng và dễ maintain. Nó giảm sự phụ thuộc, loại bỏ data thừa, nhưng việc tách nhiều bảng sẽ tạo thêm các trường primary key trong các bảng phụ cũng gọi là redundance nhưng là cần thiết để đảm bảo tính nhất quán của dữ liệu.
+Normalization giảm anomalies. Anomalies là kiểu 1 bảng (student_id, subject_id,...) thì primary key là cả 2 cái id nên nếu student k có thì k thể thêm môn học và ngược lại. Ta k nên insert anomalies là giá trị null vào PK vì đó gọi là anomalies.
+
+Nhiều công ty gom tất cả vào 1 bảng cho tiện thay vì dùng chuẩn 3NF. Code gọn nhưng khi mở rộng sẽ rối, vd khi xoá 1 row ở bảng này, phải tự xoá ở các bảng liên quan.
+
+-> Các bước tìm 3NF: - Viết functional dependency dạng chữ cái (A->B), và relation là tập hợp các trường R=(A,B)
+- Tìm minimal cover: Với A->BC thì tách ra A->B, A->C (bước làm đầu tiên); rút gọn tối thiểu các cái bên trái VD A->B, ABC->E thành A->B, AC->E. Rút gọn tương tự với các cái bên phải Vd D->E thì AFG->DHE có thể thành AFG->DH. Cũng dựa vào transitive rule VD B->A, B->D, D->A thì B->D, D->A tức B->A thừa (vẫn giữ nếu muốn giữ relation để query). Tương tự có đầy đủ ở vế trái suy ra được element bỏ đi ở vế phải VD A->B và AD->BF thành AD->F và A->B. Minimal cover vẫn thỏa mãn đầy đủ các cụm dependency
+- Tìm minimal key: lấy tất cả và bỏ từng chữ cái xuất hiện ở bên phải của các dependency nếu các chữ cái đã có có thể suy ra nó được, tức là dựa vào các chữ đã có thì vẫn có thể suy ra được tất cả các chữ như ban đầu. VD A->B, A->C thì lấy mỗi A.
+- Gộp các cục F vào thành từng Ri: làm ngược lại quy tắc 1 của minimal cover VD A->B, A->C thành ABC. Các cục Ri tối giản hơn Minimal cover vì có thể k còn giữ các dependency mà chỉ cần có đủ các chữ cái xuất hiện ít nhất 1 lần.
+- Tìm minimal key có được bao trong các Ri không, nếu không có tạo ra 1 Rkey mới là minimal key.
+
+Nhanh: A->BC thì minimal cover sẽ phân ra A->B, A->C; AB->C và AB->E thì là AB->CE; D->C, D->EB thì gom lại thành FD là D->EBC
+Bị quay vòng AB->C và C->A thì bỏ 1 cái đi, tùy cái nào cho kết quả ngắn hơn, vẫn giữ nếu muốn giữ relation để query.
+
+VD: AB->C và BC->A thì có thể dùng 1 table ABC với primary là AB, còn điều kiện BC->A ta dùng constraints CHECK để kiểm tra mà kp tạo 1 bảng mới để thể hiện cái dependency đó.
+
+-> VD: tập hợp universal attributes R(studentid, name, birth, advisor, department, semester, course, grade)
+Xây các functional dependencies: F={studentid->(name, birth); advisor->department; (studentid, semester, course)->(grade, advisor, department);} 
+Ký hiệu A B C D E F G H thì: F={A->BC; D->E; AFG->HDE}
+Tìm minimal cover là phụ thuộc tối thiểu dựa vào các cái trong F: {A->B, A-> C, D->E, AFG->HD} -> Minimal key cục này là AFG
+=> R1(ABC), R2(DE), R3(AFGDH) do R3 chứa AFG minimal key nên 3 cái này là 3 bảng 3NF luôn (nếu k thì mới phải thêm R4(AFG) vào)
+
+-> VD1: cần lưu Result (studentID, name, dob, gender, result, grade, subjectID, subjectName, credit) biết rằng grade phụ thuộc khoảng result VD [0,4) là F và [4,5) là D.
+Theo chuẩn 3NF thì phải chia nhỏ ra, giả sử gom grade và result thì có thể tách bảng Grade(min, max, grade) thay vì Grade (result, grade) cả triệu phần tử vì result là float.
+
+VD2 FD: ABC->D và D->A 
+C1: Ta chia theo cảm tính là R1(ABCD) với key là ABC vì ABC tối thiểu suy ra được cả ABCD.
+C2: VĐ là C1 k thể hiện được constraint D->A, k thể insert vào bảng A và D nếu B và C không có. Bản gốc chính là minimal cover để tạo bảng, còn 3NF (ABCD) có thể k bảo toàn FD
+
+VD3: A->B,BC->E,ED->A thì minimal cover vẫn thế(theo đúng 3 bước bên trên) và 3NF vẫn thế và thêm R4 (ACD) là key
+
+-> Tiêu chuẩn đánh giá sự tối ưu: 
+UNF: khi có cột là multivalue attributes. 
+1NF: trong 1 bảng k được có record multivalue, có thể value trùng
+2NF: mọi attributes trong bảng đều fully dependency vào primary key. VD primary key là 2 trường thì mọi key khác đều phụ thuộc vào cả 2 trường mới ra 1 giá trị chứ kp 1 trường
+3NF: tất cả atts đều fully và directly phụ thuộc vào primary key. Chứ kp là transitively dependent VD B phụ thuộc A, C phụ thuộc B thì C phụ thuộc A với A là primary key
+
+
+
+# Replica
+Dùng master copy và các slave là secondary copy theo quan hệ 1-m hay n-m. Dùng khi đọc nhiều ghi ít, đọc từ slave, ghi vào master sẽ tự update vào slave. VD backup database hay đánh index, tạo materialized view cũng là 1 cách dùng replica.
+Update master sẽ update sang slave nhưng phải đảm bảo delay để mọi DB read đồng bộ ngay lập tức
+
+-> Vấn đề đồng bộ: ghi master, đọc slave ra data cũ chưa kịp update.
+- Khi 1 client ghi vào master, đảm bảo mọi request đọc của client đó sẽ gọi vào master trong 1 khoảng thời gian cho đến khi xác nhận đông bộ xong.
+- Cấu hình replica để xác nhận thay đổi chỉ sau khi update cả master và slave, performance khi update sẽ giảm 
+
+
+
+# Partition database
+Theo thời gian, database ngày càng phình to. VD shopee 1 ngày có 1 triệu đơn hàng mới thì bảng order vẫn phải đảm bảo truy vấn vẫn nhanh và quản lý tốt. 
+Partition database là giải pháp phân vùng dữ liệu thành nhiều bảng. Khi query data hoặc lưu vào data mới cần có cơ chế chọn ra đúng loại bảng thao tác là được.
+Thực tế partition database chỉ giúp quản lý db dễ hơn, còn tốc độ chỉ nhanh hơn nếu biết được phải lấy từ bảng nào.
+
+Nhiều cách triển khai: Dùng hash hoặc modulo; Tìm cách chia theo 1 thuộc tính gì đó như vị trí địa lý, prefix; Cho id tăng dần và mỗi 1 triệu id lưu vào 1 bảng.
+Nếu làm kiểu orderId%3 để chia vào 3 bảng thì tìm order từ userId sẽ phải query 3 bảng luôn. Làm userId%3 thì tìm theo orderId lại bị lâu.
+
+Giải pháp query tốt hơn là chia theo thời gian. VD mỗi năm 1 bảng riêng thì query theo thời gian sẽ nhanh. Nếu cần query order theo userId, chỉ cần kết hợp phân trang thì lấy dần từ bảng thời gian gần nhất đổ về mà k cần lấy tất cả. Cách này cũng tạo điều kiện giải phóng data quá cũ k cần dùng nữa, VD xoá data quá 5 năm trước chẳng hạn.
+
+-> Tự implement hoặc MySQL hỗ trợ sẵn partition
+VD: PARTITION BY RANGE COLUMNS (order_date) {
+  PARTITION p2023 VALUES LESS THAN ('2023-01-01'),
+  PARTITION p2024 VALUES LESS THAN ('2024-01-01'),
+  PARTITION pmax VALUES LESS THAN (MAXVALUE),
+}
+=> Có thể thêm cơ chế tự động chia partition mới khi đủ 10 triệu records, hoặc tự động check để thêm phân vùng mới sau mỗi năm. Điều này tuỳ vào số lượng record, nếu 1 năm ít records quá có thể gom 2 năm 1 bảng để tối ưu chi phí. Đôi khi ta kb và phải dùng EXPLAIN để check dùng partition nào hay duyệt tất.
+
+Tuỳ điều kiện query và các chia partition, mysql tự check cần tìm trong đúng PARTITION nào (Partition Pruning) nếu có thể để tăng tốc query. Có thể check với câu lệnh EXPLAIN.
+VD: SELECT * FROM orders => search cả 3 partition như bth
+SELECT * FROM orders PARTITION (p2023); => chỉ định chỉ lấy trong p2023
+SELECT * FROM orders WHERE order_date BETWEEN '2022-01-01' AND '2024-12-31'; => tự hiểu là tìm trong p2023 và pmax
+
+-> Mongodb có chức năng tương tự là db sharding. Cũng chọn 1 trường r chia thôi.
+
+
+
+# Deferred join
+K nên dùng * trong SELECT với đa số cases, thà liệt kê từng trường vẫn nhanh hơn dùng *
+Mặc định SQL dùng cache, SQL_NO_CACHE sẽ disable nó.
+
+VD k dùng deferred join: Bảng có 10M phần tử, cần lấy ra 50 phần tử
+SELECT SQL_NO_CACHE userId, orderId, user_phone, order_date, order_status FROM pre_order WHERE order_date > '2024-01-01' ORDER BY order_date, userId DESC LIMIT 50; => mất 7s
+Bảng pre_order có primary key là userId, kể cả đánh thêm index cho order_date vẫn mất thời gian như vậy. Ta nghĩ là nó tìm theo condition order_date bằng index, rồi ORDER BY order_date bằng index và order by userId tuần tự, rồi cắt lấy 50 giá trị, rồi "table access by index rowid" lấy mọi trường,
+K rõ vì sao Optimizer sai, nó dùng full table scan ở trường hợp này. Có lẽ do lấy mọi trường mà nó nghĩ full table scan nhanh hơn tìm index rồi table access by index rowid
+
+VD dùng deferred join:
+SELECT SQL_NO_CACHE a.userId, orderId, user_phone, order_date, order_status FROM 
+(
+  SELECT userId FROM pre_order WHERE order_date > '2024-01-01' ORDER BY order_date, user_Id DESC LIMIT 50
+) as a JOIN pre_order ON pre_order.userId = a.userId => mất 1s
+Mấu chốt là SELECT mọi trường sẽ k dùng index, còn SELECT userId sẽ dùng mỗi index tree. Làm v sẽ ép optimizer phải tối ưu theo hướng dùng index. 
+Đầu tiên dùng index tìm pre_order theo condition order_date, rồi ORDER BY order_date bằng index, rồi orderby user_Id tuần tự, rồi limit 50 phần tử, rồi "table access by index rowid" lấy mọi trường.
+
+Deferred join có nhiều kiểu phức tạp, tức là việc ta chia ra bảng con với condition để giảm số lượng trước, rồi mới chạy lệnh join sau.
+Deferred join thường đem lại hiệu suất tốt hơn nếu bảng con có thể tìm theo index với tốc độ cao và làm giảm số lượng record đi đáng kể. Nếu không thì k nên dùng
+Thường ta kqt trừ khi gặp vđ về hiệu suất. NN vì optimizer đôi khi sai, phải check bằng EXPLAIN mới thấy nó k dùng index dù có đánh index.
+

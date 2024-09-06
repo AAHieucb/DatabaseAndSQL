@@ -64,13 +64,9 @@ INSERT INTO A (idB, idC) VALUES (1, 101),(1, 102),(1,103),(2,101),(2,103),(3,101
 
 
 -- Tìm mọi idB mà có tất cả idC: many - to - many
--- Hướng: nhóm từng nhóm trong A thành các nhóm có idB phân biệt với GROUP BY, trong từng nhóm ta check xem mọi idC 
--- thì đều có trong nhóm hay k. Nếu mọi idC đều có trong nhóm thì ta lấy cái giá trị idB đó
--- Nhưng khi chia thành từng nhóm với GROUP BY thì ta k thao tác được với các phần tử trong nhóm => bỏ
+-- Hướng: nhóm từng nhóm trong A thành các nhóm có idB phân biệt với GROUP BY, trong từng nhóm ta check xem mọi idC thì đều có trong nhóm hay k. Nếu mọi idC đều có trong nhóm thì ta lấy cái giá trị idB đó. Nhưng khi chia thành từng nhóm với GROUP BY thì ta k thao tác được với các phần tử trong nhóm => bỏ
 
--- Dùng nested query, từ bảng A lấy ra các idB thỏa mãn điều kiện: từ bảng A lọc ra các idB trùng, left join nó với
--- bảng C. Khi này ta sẽ được 1 bảng có các giá trị idB trùng với idB cần check bên ngoài + các giá trị idB có thể 
--- NULL -> lấy ra các giá trị NULL, nếu tồn tại giá trị NULL thì k bao hết nên k lấy
+-- Dùng nested query, từ bảng A lấy ra các idB thỏa mãn điều kiện: từ bảng A lọc ra các idB trùng, left join nó với bảng C. Khi này ta sẽ được 1 bảng có các giá trị idB trùng với idB cần check bên ngoài + các giá trị idB có thể NULL -> lấy ra các giá trị NULL, nếu tồn tại giá trị NULL thì k bao hết nên k lấy
 SELECT DISTINCT idB 
 FROM A as x
 WHERE NOT EXISTS(

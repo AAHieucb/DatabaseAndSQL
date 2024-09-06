@@ -1,4 +1,4 @@
-﻿-- Basic/Câu lệnh hệ thống
+﻿-- Câu lệnh hệ thống
 SELECT * FROM sys.databases; -- Table lưu các database hiện tại 
 SELECT * FROM INFORMATION_SCHEMA.TABLES -- Lưu các SCHEMA và table 
 SELECT * FROM INFORMATION_SCHEMA.COLUMNS -- Lưu tổ hợp SCHEMA TABLE và COLUMN
@@ -13,8 +13,7 @@ SELECT * FROM production.products
 WHERE list_price >= 100 -- Maybe nhanh hơn
 
 CREATE UNIQUE INDEX IndexNameUnique ON production.categories(category_id)
--- UNIQUE INDEX để đánh cho các trường của table mà unique ở mỗi record, nó cũng ngăn cản dữ liệu mới thêm vào mà bị trùng với
--- dữ liệu đã có trong SQL. 2 loại INDEX dùng nào cũng được. UNIQUE có thể có nhiều còn PRIMARY KEY chỉ có 1
+-- UNIQUE INDEX để đánh cho các trường của table mà unique ở mỗi record, nó cũng ngăn cản dữ liệu mới thêm vào mà bị trùng với dữ liệu đã có trong SQL. 2 loại INDEX dùng nào cũng được. UNIQUE có thể có nhiều còn PRIMARY KEY chỉ có 1
 
 DROP INDEX index_name ON production.products
 DROP INDEX IndexNameUnique ON production.categories
@@ -109,6 +108,4 @@ GO
 
 -- Câu lệnh SELECT
 SELECT * FROM Lecturers WHERE FullName LIKE 'x%%' ESCAPE 'x';
--- Các ký tự đại diện như %, [], _ mà lại muốn tìm trong data thực tế thì ta chỉ cần thêm vào trước nó 1 loại ký tự k dùng
--- như x ở đây và ta dùng ESCAPE '<ký tự đó>' thì nó hiểu là 1 ký tự sau x sẽ coi như ký tự bth. VD ở trên ta đang tìm 
--- chuỗi bắt đầu bằng %. VD: a LIKE ‘H%!_’ ESCAPE ‘!’; tức là tìm chuỗi bắt đầu bằng H và kết thúc bằng _
+-- Các ký tự đại diện như %, [], _ mà lại muốn tìm trong data thực tế thì ta chỉ cần thêm vào trước nó 1 loại ký tự k dùng như x ở đây và ta dùng ESCAPE '<ký tự đó>' thì nó hiểu là 1 ký tự sau x sẽ coi như ký tự bth. VD ở trên ta đang tìm chuỗi bắt đầu bằng %. VD: a LIKE ‘H%!_’ ESCAPE ‘!’; tức là tìm chuỗi bắt đầu bằng H và kết thúc bằng _

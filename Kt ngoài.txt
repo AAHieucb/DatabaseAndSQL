@@ -1,0 +1,66 @@
+# SQL Server
+SQL Server là chuẩn RDBMS có đầy đủ tính năng. Có nhiều dịch vụ đi kèm cho phép phân tích dữ liệu bằng SSAS(SQL Server Analysis Services) hay tạo được báo cáo bằng SSRS(SQL Server Reporting Services) hay thực hiện quá trình ETL(Extract-Transform-Load) bằng SSIS(SQL Server Integration Services), SQL Full Text Search.
+Có thể cài trên máy đơn or trên hệ thống Cluster.
+
+-> SQLite
+Bản đơn giản của SQL server nhưng vẫn hỗ trợ đầy đủ tính năng nâng cao, ACID. K cần user password, k cần database server mà lưu luôn vào chỉ 1 file. 
+=> Thg dùng trong các hệ thống vừa và nhỏ, dữ liệu nhỏ, không yêu cầu đồng bộ cao
+
+-> MySQL, T-SQL (Transact-SQL) hay gì cũng chỉ là ngôn ngữ SQL or bản mở rộng, chỉ hơi khác cú pháp 1 chút.
+
+
+
+# Dùng SSMS
+SSMS là phần mềm quản lý db qua giao diện, phải kết nối vào db server lưu data là SQL Server. Tương tự có Azure Data Studio.
+Mở ct SQLCMD để dùng câu lệnh SQL trên terminal được
+Có thể vẽ diagram cho relational database
+F5 để chạy
+
+-> Setup SQL Server
+Set up tk đăng nhập được: Security -> New Login -> Tạo account, set default database, Status set login là enabled và grant quyền access database engine -> rightclick database -> Security -> check SQL Server and Window Authentication mode -> vào database nào đó -> New User -> đặt và chọn User là tk login vừa tạo -> cấp quyền gì cho nó với database này -> đăng nhập ok, vì 1 tk phải có ít nhất 1 database nào đó truy cập được thì mới đăng nhập được
+Để dùng sa: rightclick sa -> đổi mật khẩu tùy ý -> set up quyền -> đăng nhập được -> tài khoản sa k cần cấp quyền user cho database nào hết vì nó mặc định vào được tất cả
+Tùy chỉnh quyền hạn của tài khoản đó, add thêm nhiều user truy cập vào database, nhưng 1 db chỉ có 1 db_owner duy nhất. Mặc định dùng Window Authentication là root có mọi quyền.
+
+Để xoá 1 tk, ta phải xoá nó trong từng db và trong mục security chung của database. Nếu tk đó owned 1 schema của database thì thì phải đổi quyền đó sang cho ngừoi khác để nó k owned gì cả mới xoá được
+
+
+
+# Hệ thống db OLTP và OLAP 
+OLTP (On-line transactional processing) được dùng trong hầu hết các nghiệp vụ realtime ở dạng transaction. VD rút tiền từ tk ngân hàng
+OLAP (on-line analytical processing) là phân tích trực tuyến, làm vc với lượng rất lớn data nên độ chính xác và toàn vẹn giao dịch k đươc như OLTP.
+=> Phân biệt: OLTP phải ổn định và nhanh để phục vụ query data ngay lập tức, còn OLAP đủ lớn và mạnh về tính toán để phân tích dữ liệu kinh doanh lâu dài.
+
+SQL là dùng cho các hệ thống OLAP, query phức tạp với data lớn. Thường mở rộng chiều dọc, tăng CPU, RAM, HDD cho các node đã có, làm node đó mạnh lên nhiều lần. 
+NoSQL dùng cho OLTP, k phù hợp với query phức tạp. Thường mở rộng chiều ngang như tăng số lượng node lên đông hơn trong cụm cluster.
+
+
+
+# So sánh PostgreSQL, MySQL, SQL Server
+PostgreSQL tuân thủ nghiêm ngặt chuẩn SQL, PostgreSQL có nhiều tính năng cao cấp như kiểm soát đồng thời cao, hỗ trợ các kiểu dữ liệu phức tạp hơn nên dùng cho các ứng dụng có tải công việc lớn. 
+Còn MySQL thường linh hoạt hơn và có thể không đúng chuẩn, dùng cho ứng dụng web nhỏ và trung bình với tốc độ truy cập cao, do mã nguồn mở nên cộng động lớn và dễ dùng hơn.
+SQL Server của Microsoft cũng mạnh như Postgre và phù hợp với các công cụ quản lý của Microsoft nhưng chi phí cao.
+
+
+
+# Other
+-> Có 2 loại là máy chủ vật lý (HDD, CPU, RAM) và máy chủ ảo VPS (virtual private server). 
+Máy chủ ảo có thể là cloud hoặc dùng 1 máy chủ vật lý cài phần mềm để chia ra nhiều máy chủ ảo cho ngừoi dùng.
+
+-> Tại sao k dùng Excel? Nó là 1 chương trình quản lý dữ liệu mạnh, nhưng khi dữ liệu quá lớn, nó sẽ thua SQL cũng như các phương thức truy xuất, nhập, quản lý khác.
+
+-> RDBMS: hệ thống quản trị cơ sở dữ liệu mở rộng dùng cho cơ sở dữ liệu cơ bản là quan hệ(Relational Database Management System). SSMS là một RDBMS
+
+-> Open Database Connectivity (ODBC) là 1 database driver trên window. Nó là 1 trình điều khiển giúp kết nối giữa ứng dụng client với cơ sở dữ liệu quan hệ trên server. 
+Nó là ứng dụng phía client nên k đòi hỏi xử lý gì ở server. ODBC làm cho nguồn dữ liệu trở thành tổng quát đối với Client. Tức là ứng dụng Client không cần quan tâm kiểu cơ sở dữ liệu mà nó đang nối là gì, mọi loại kiểu cơ sở dữ liệu đều dùng ODBC đc. VD: có thể mở ODBC trong máy và cho kết nối với 1 data provider nào đó (như SQL Server).
+Tên của nguồn CSDL ODBC để connect là DSN (kp DNS) có 3 loại: UserDSN (chỉ ng tạo ra dùng và chỉ trên máy đang dùng); SystemDSN (bất kỳ ai sử dụng máy này đều dùng đc, dùng khi cài đặt ứng dụng CSDL web hay các ứng dụng trên máy tính khác cần dùng CSDL); File DSN có thể đc copy và dùng bởi máy tính khác -> tạo nguồn ODBC trong control panel.
+
+Có hai cách connect: 
+C1 dùng string connection
+C2: tạo trong control panel trong UserDSN nguồn open database connectivity kết nối đến cái SQL server sẵn r dùng cái tên dsn đó trên các ưng dụng cần kết noi là xong
+
+-> Nhiều công ty họ lưu hết vào 1 bảng, chả tuân thủ 3NF vì nested query k tốt khi hệ thống phức tạp. Bù lại khi update phải update mọi bảng liên quan.
+
+-> Stored database -> internal schema (internal level) -> conceptual schema -> many external views for each end user
+=> internal schema là file lưu key-val; conceptual level là các bảng và query, external view là view thấy data trong SQL
+
+-> sysbench là tool test performance, mock data cho sql. URL: https://www.youtube.com/watch?v=dpDGXbe_LeE

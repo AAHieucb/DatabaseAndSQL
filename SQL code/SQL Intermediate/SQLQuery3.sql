@@ -13,7 +13,7 @@ BEGIN
 END;
 GO
 
-SELECT sales.udfNetSale(10, 100, 0.1) net_sale -- gọi ez với tên và tham số, đổi tên hiển thị sang net_sale
+SELECT sales.udfNetSale(10, 100, 0.1) net_sale -- Gọi ez với tên và tham số, đổi tên hiển thị sang net_sale
 
 -- Dùng lồng function trong 1 function khác
 SELECT
