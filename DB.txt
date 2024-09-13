@@ -30,9 +30,29 @@ Custom level of locking
 Lấy data bảng này cho vào bảng khác
 
 -> Query data phức tạp giữa các bảng
+Deferred join
 
 -> Connect DB vào ứng dụng 
 
 -> Thiết kế database tối ưu
 
 -> Partition database
+
+
+
+## SQL server
+# SSMS 
+SSMS quản lý db qua giao diện, phải kết nối vào db server lưu data là SQL Server. Mở ct SQLCMD để dùng câu lệnh SQL trên terminal được. 
+Tương tự có Azure Data Studio.
+
+-> Setup SQL Server
+Tạo tk: Security -> New Login -> Tạo account, set default database, Status set login là enabled và grant quyền access database engine -> rightclick database -> Security -> check SQL Server and Window Authentication mode -> vào database nào đó -> New User -> đặt và chọn User là tk login vừa tạo -> cấp quyền gì cho nó với database này -> đăng nhập ok, vì 1 tk phải có ít nhất 1 database nào đó truy cập được thì mới đăng nhập được
+Để dùng sa: rightclick sa -> đổi mật khẩu tùy ý -> set up quyền -> đăng nhập được -> tk sa k cần cấp quyền user cho database nào hết vì nó mặc định vào được tất cả
+Có thể tùy chỉnh quyền hạn của tk, add thêm nhiều user truy cập vào database, nhưng 1 db chỉ có 1 db_owner duy nhất. 
+=> Thường sẽ tạo user riêng cho server dùng, còn tk sa hoặc window authentication chỉ cho admin dùng để quản lý mọi thứ.
+=> ref tới "NodeJS / Kt ngoài / Config SSMS kết nối được với mssql nodejs trên máy win (hoạt động tốt năm 2022)"
+
+Để xoá 1 tk, ta phải xoá nó trong từng db và trong mục security chung của database. Nếu tk đó owned 1 schema của database thì thì phải đổi quyền đó sang cho ngừoi khác để nó k owned gì cả mới xoá được.
+
+
+

@@ -1,11 +1,5 @@
-# N+1 queries problems
+# N + 1 queries problems
 Gặp khi ta query list id rồi query detail cho từng id, mỗi id là 1 câu lệnh SQL. Vấn đề này luôn có thể giải quyết bằng cách sửa code. 
 Giải pháp: Gom thành 1 query với JOIN; Dùng 2 queries, 1 query lấy list id, 1 query dùng IN (list_id). Sau đó xử lý thêm ở trong code cho data trả về.
 
 
-
-# ACID
-Mỗi lệnh SQL là 1 tx độc lập 
-Consistency: mọi tx sẽ đưa db từ một trạng thái hợp lệ này sang một trạng thái hợp lệ khác, kbh để lại 1 trạng thái không nhất quán
-Isolation: các tx được thực hiện độc lập với nhau, có nhiều cấp độ cô lập đảm bảo các tx chạy đồng thời k ảnh hưởng lẫn nhau.
-Durability: một tx đã được commit thì thay đổi phải được đồng bộ xuống db kể cả khi sự cố mất điện. Các tx thành công mà chưa dược đồng bộ xuống database phải được đồng bộ khi hệ thống hoạt động trở lại.
