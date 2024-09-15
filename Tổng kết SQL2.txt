@@ -141,7 +141,7 @@ Còn có WITH(NOLOCK) override cả mặc định thành chả lock gì luôn. V
 Normalization k giúp query nhanh hơn vì muốn lấy data có thể phải join nhiều table hơn nhưng giúp tối ưu bộ nhớ, làm data k bị trùng và dễ maintain. Nó giảm sự phụ thuộc, loại bỏ data thừa, nhưng việc tách nhiều bảng sẽ tạo thêm các trường primary key trong các bảng phụ cũng gọi là redundance nhưng là cần thiết để đảm bảo tính nhất quán của dữ liệu.
 Normalization giảm anomalies. Anomalies là kiểu 1 bảng (student_id, subject_id,...) thì primary key là cả 2 cái id nên nếu student k có thì k thể thêm môn học và ngược lại. Ta k nên insert anomalies là giá trị null vào PK vì đó gọi là anomalies.
 
-Nhiều công ty gom tất cả vào 1 bảng cho tiện thay vì dùng chuẩn 3NF. Code gọn nhưng khi mở rộng sẽ rối, vd khi xoá 1 row ở bảng này, phải tự xoá ở các bảng liên quan.
+Nhiều công ty họ lưu hết vào 1 bảng, chả tuân thủ 3NF vì nested query k tốt khi hệ thống phức tạp. Bù lại khi update phải update mọi bảng liên quan.
 
 -> Các bước tìm 3NF: - Viết functional dependency dạng chữ cái (A->B), và relation là tập hợp các trường R=(A,B)
 - Tìm minimal cover: Với A->BC thì tách ra A->B, A->C (bước làm đầu tiên); rút gọn tối thiểu các cái bên trái VD A->B, ABC->E thành A->B, AC->E. Rút gọn tương tự với các cái bên phải Vd D->E thì AFG->DHE có thể thành AFG->DH. Cũng dựa vào transitive rule VD B->A, B->D, D->A thì B->D, D->A tức B->A thừa (vẫn giữ nếu muốn giữ relation để query). Tương tự có đầy đủ ở vế trái suy ra được element bỏ đi ở vế phải VD A->B và AD->BF thành AD->F và A->B. Minimal cover vẫn thỏa mãn đầy đủ các cụm dependency
