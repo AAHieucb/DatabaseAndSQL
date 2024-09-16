@@ -1,6 +1,4 @@
-SQL
-
-
+//!!!!!!!!!
 # Basic
 sp_helptext xem chức năng của lệnh
 
