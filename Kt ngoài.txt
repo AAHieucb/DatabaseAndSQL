@@ -36,6 +36,44 @@ Durability: một tx đã được commit thì thay đổi phải được đồ
 
 
 
+# Cơ chế database lưu trong storage
+Data được lưu trên đĩa cứng or mainmem như bth. Vc truyền data giữa đĩa cứng và main mem thông qua units of disk blocks.
+Disk defragmentation trong máy tính nếu right click properties sẽ thấy ổ đĩa chia theo kiểu so le: xanh trắng xanh xanh xanh trắng xanh xanh xanh
+=> VD các vùng màu xanh là ứng dụng chạy. Đáng lẽ nó phải kín xanh hết nhưng vẫn dôi ra các vùng màu trắng là do ứng dụng dùng xong thì bộ nhớ giảm đi làm dôi ra các phần thừa. Về sau các ứng dụng dùng thêm vùng nhớ thì append dùng tiếp vào các phần đằng sau vì các vùng trắng k đủ thành ra 1 ứng dụng nhưng lại lưu ở nhiều vùng nhớ rời rạc làm nó truy cập bị chậm. Các phần mêm disk optimization chính là cơ chế rearrange lại các vùng nhớ làm cho ứng dụng sau khi cài và sử dụng sẽ lưu về các vùng liên tiếp nhau trên disk.
+
+-> Cơ chế: Khi ứng dụng chạy sẽ lưu theo các disk block, giả sử mỗi cục [] là 1 block, mỗi lần read write query DB sẽ access theo 1 lượng memory page, giả sử ở đây memory page cho query tới 2 block, ứng dụng ta chạy có màu đỏ:
+[đỏ][trắng][trắng][đỏ][trắng][đỏ][trắng][trắng]...
+[         ]       [         ][         ]
+=> Do ứng dụng được lưu rời rạc trên đĩa làm nó tốn rất nhiều query để lấy được data. VD như trên thì các query bị thừa khi query cái trắng là vùng nhớ trống or vùng nhớ của 1 ứng dụng khác k cần thiết => ứng dụng disk optimization cơ chế sẽ đưa các vùng nhớ của cùng ứng dụng về sát lại nhau:
+[đỏ][đỏ][đỏ][đỏ][trắng][trắng][trắng]...
+[      ][      ]
+=> read write I/O chơi đúng 2 memory page query là xong. 
+
+
+
+# Cơ chế xử lý query
+Query của user --Parser--> Relational Algebric(RA) --Optimizer--> Query execution plan. Optimizer dùng equivalence transformation chuyển sang code tương đương nhưng tốc độ nhanh hơn: Ưu tiên chạy select và projection trước, logic và join thực hiện sau cùng khi data đã được lọc nhỏ r.
+
+-> Algebric expression:
+Natural join là A |X| B. Innner join ký hiệu giống và có thêm điều kiện nhỏ ở bên dưới. VD: A |X|<a>10> B. INNER JOIN cũng gọi là theta join
+VD1: SELECT * FROM R1 WHERE R1.A=X AND R1.C > Y => o<R1.A=X ^ R1.C>Y>(R1)
+VD2: SELECT St.* FROM Student St, Subject S, Enrollment E WHERE St.StudenId = E.StudenId AND E.Sid = S.Sid AND Sname = 'Database' AND grade = 'A' 
+C1: n<St.*>(o<sname='Database'^grade='A'>(St*E*S)) -> tức là natural join 3 cái r check điều kiện lồng dần dần
+C2: n<St.*>(St*(o<grade='A'>E)*(o<sname='Database'>S))
+=> Nhìn chung 2 cách tốc độ ngang nhau nhưng nếu kích thước của (o<grade='A'>E) nhỏ hơn đáng kể so với (E) thì cách 2 nhanh hơn cách 1.
+VD3: R1 có n phần tử, R2 có m phần tử
+R1 join R2 thì số lần duyệt = n + n x m tức duyệt R1 là n, duyệt R2 là n x m 
+R2 join R1 thì duyệt R1 n x m, duyệt R2 là m tức m + n x m
+=> Nếu n << m thì tốc độ join của TH1 nhanh hơn TH2 nhiều => optimizer cần chuyển đổi được như v
+VD4: o<O1>(E1 x E2) = E1|X|<O1>(E2) thì cách 1 sẽ tạo cartesian product r dùng select cái thỏa mãn. Cách 2 thì lọc trước r mới lấy cartesian sẽ nhanh hơn
+VD5: E1|X|(E2|X|E3) = (E1|X|E2)|X|E3 nếu E2|X|E3 << E1|X|E2 thì bên trái rẻ hơn
+VD6: SELECT Name FROM BORROWER as B WHERE NOT EXIST ( SELECT * FROM BOOK_LOANS as BL WHERE B.CardNo=BL.CardNo) => quy về join để convert sang dạng số học
+=> Project(name)(S(card_no)(b)-S(card_no(BL)) join B) 
+VD7: select E.fname, E.lname, E.address from employee as E NATURAL JOIN works_on as W NATURAL JOIN project as P and PLocation = “Houston” and not exist (select*From Dept_Location Where DNumber = E.DNo and DLocation = “Houston”)
+=> Project(E.fname, E.lname, E.address)(Project(DNO)(S(PLocation='Houston')(E |><| W |><| P)) - Project(DNO)(S(DLocation='Houston')(Dept_Location)) |><| (E|><|W|><|P))
+
+
+
 # Other
 -> Có 2 loại là máy chủ vật lý (có HDD, CPU, RAM) và máy chủ ảo VPS (virtual private server). 
 Máy chủ ảo có thể là cloud hoặc dùng 1 máy chủ vật lý host lên và cài phần mềm để chia ra nhiều máy chủ ảo cung cho ngừoi dùng.

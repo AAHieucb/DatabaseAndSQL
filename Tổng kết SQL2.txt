@@ -137,46 +137,6 @@ Còn có WITH(NOLOCK) override cả mặc định thành chả lock gì luôn. V
 
 
 
-# Normalization tối ưu design DB
-Normalization k giúp query nhanh hơn vì muốn lấy data có thể phải join nhiều table hơn nhưng giúp tối ưu bộ nhớ, làm data k bị trùng và dễ maintain. Nó giảm sự phụ thuộc, loại bỏ data thừa, nhưng việc tách nhiều bảng sẽ tạo thêm các trường primary key trong các bảng phụ cũng gọi là redundance nhưng là cần thiết để đảm bảo tính nhất quán của dữ liệu.
-Normalization giảm anomalies. Anomalies là kiểu 1 bảng (student_id, subject_id,...) thì primary key là cả 2 cái id nên nếu student k có thì k thể thêm môn học và ngược lại. Ta k nên insert anomalies là giá trị null vào PK vì đó gọi là anomalies.
-
-Nhiều công ty họ lưu hết vào 1 bảng, chả tuân thủ 3NF vì nested query k tốt khi hệ thống phức tạp. Bù lại khi update phải update mọi bảng liên quan.
-
--> Các bước tìm 3NF: - Viết functional dependency dạng chữ cái (A->B), và relation là tập hợp các trường R=(A,B)
-- Tìm minimal cover: Với A->BC thì tách ra A->B, A->C (bước làm đầu tiên); rút gọn tối thiểu các cái bên trái VD A->B, ABC->E thành A->B, AC->E. Rút gọn tương tự với các cái bên phải Vd D->E thì AFG->DHE có thể thành AFG->DH. Cũng dựa vào transitive rule VD B->A, B->D, D->A thì B->D, D->A tức B->A thừa (vẫn giữ nếu muốn giữ relation để query). Tương tự có đầy đủ ở vế trái suy ra được element bỏ đi ở vế phải VD A->B và AD->BF thành AD->F và A->B. Minimal cover vẫn thỏa mãn đầy đủ các cụm dependency
-- Tìm minimal key: lấy tất cả và bỏ từng chữ cái xuất hiện ở bên phải của các dependency nếu các chữ cái đã có có thể suy ra nó được, tức là dựa vào các chữ đã có thì vẫn có thể suy ra được tất cả các chữ như ban đầu. VD A->B, A->C thì lấy mỗi A.
-- Gộp các cục F vào thành từng Ri: làm ngược lại quy tắc 1 của minimal cover VD A->B, A->C thành ABC. Các cục Ri tối giản hơn Minimal cover vì có thể k còn giữ các dependency mà chỉ cần có đủ các chữ cái xuất hiện ít nhất 1 lần.
-- Tìm minimal key có được bao trong các Ri không, nếu không có tạo ra 1 Rkey mới là minimal key.
-
-Nhanh: A->BC thì minimal cover sẽ phân ra A->B, A->C; AB->C và AB->E thì là AB->CE; D->C, D->EB thì gom lại thành FD là D->EBC
-Bị quay vòng AB->C và C->A thì bỏ 1 cái đi, tùy cái nào cho kết quả ngắn hơn, vẫn giữ nếu muốn giữ relation để query.
-
-VD: AB->C và BC->A thì có thể dùng 1 table ABC với primary là AB, còn điều kiện BC->A ta dùng constraints CHECK để kiểm tra mà kp tạo 1 bảng mới để thể hiện cái dependency đó.
-
--> VD: tập hợp universal attributes R(studentid, name, birth, advisor, department, semester, course, grade)
-Xây các functional dependencies: F={studentid->(name, birth); advisor->department; (studentid, semester, course)->(grade, advisor, department);} 
-Ký hiệu A B C D E F G H thì: F={A->BC; D->E; AFG->HDE}
-Tìm minimal cover là phụ thuộc tối thiểu dựa vào các cái trong F: {A->B, A-> C, D->E, AFG->HD} -> Minimal key cục này là AFG
-=> R1(ABC), R2(DE), R3(AFGDH) do R3 chứa AFG minimal key nên 3 cái này là 3 bảng 3NF luôn (nếu k thì mới phải thêm R4(AFG) vào)
-
--> VD1: cần lưu Result (studentID, name, dob, gender, result, grade, subjectID, subjectName, credit) biết rằng grade phụ thuộc khoảng result VD [0,4) là F và [4,5) là D.
-Theo chuẩn 3NF thì phải chia nhỏ ra, giả sử gom grade và result thì có thể tách bảng Grade(min, max, grade) thay vì Grade (result, grade) cả triệu phần tử vì result là float.
-
-VD2 FD: ABC->D và D->A 
-C1: Ta chia theo cảm tính là R1(ABCD) với key là ABC vì ABC tối thiểu suy ra được cả ABCD.
-C2: VĐ là C1 k thể hiện được constraint D->A, k thể insert vào bảng A và D nếu B và C không có. Bản gốc chính là minimal cover để tạo bảng, còn 3NF (ABCD) có thể k bảo toàn FD
-
-VD3: A->B,BC->E,ED->A thì minimal cover vẫn thế(theo đúng 3 bước bên trên) và 3NF vẫn thế và thêm R4 (ACD) là key
-
--> Tiêu chuẩn đánh giá sự tối ưu: 
-UNF: khi có cột là multivalue attributes. 
-1NF: trong 1 bảng k được có record multivalue, có thể value trùng
-2NF: mọi attributes trong bảng đều fully dependency vào primary key. VD primary key là 2 trường thì mọi key khác đều phụ thuộc vào cả 2 trường mới ra 1 giá trị chứ kp 1 trường
-3NF: tất cả atts đều fully và directly phụ thuộc vào primary key. Chứ kp là transitively dependent VD B phụ thuộc A, C phụ thuộc B thì C phụ thuộc A với A là primary key
-
-
-
 # Replica
 Dùng master copy và các slave là secondary copy theo quan hệ 1-m hay n-m. Dùng khi đọc nhiều ghi ít, đọc từ slave, ghi vào master sẽ tự update vào slave. VD backup database hay đánh index, tạo materialized view cũng là 1 cách dùng replica.
 Update master sẽ update sang slave nhưng phải đảm bảo delay để mọi DB read đồng bộ ngay lập tức

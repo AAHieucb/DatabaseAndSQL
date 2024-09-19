@@ -3,3 +3,74 @@ Gặp khi ta query list id rồi query detail cho từng id, mỗi id là 1 câu
 Giải pháp: Gom thành 1 query với JOIN; Dùng 2 queries, 1 query lấy list id, 1 query dùng IN (list_id). Sau đó xử lý thêm ở trong code cho data trả về.
 
 
+
+# Normalization tối ưu design DB
+Normalization k giúp query nhanh hơn vì muốn lấy data có thể phải join nhiều table hơn nhưng giúp tối ưu bộ nhớ, làm data k bị trùng và dễ maintain. Nó giảm sự phụ thuộc, loại bỏ data thừa, nhưng việc tách nhiều bảng sẽ tạo thêm các trường primary key trong các bảng phụ cũng gọi là redundance nhưng là cần thiết để đảm bảo tính nhất quán của dữ liệu.
+Normalization giảm anomalies. Anomalies là kiểu 1 bảng (student_id, subject_id,...) thì primary key là cả 2 cái id nên nếu student k có thì k thể thêm môn học và ngược lại. Ta k nên insert anomalies là giá trị null vào PK vì đó gọi là anomalies.
+
+Nhiều công ty họ lưu hết vào 1 bảng, chả tuân thủ 3NF vì nested query k tốt khi hệ thống phức tạp. Bù lại khi update phải update mọi bảng liên quan.
+
+-> Functional dependency
+Có 3 kiểu FD: full, partial và transitive
+Transitive là kiểu A->B->C thì A->C là 1 transtive FD tạo từ 2 FD kia
+
+--> F là 1 phủ của G nếu: mọi FD trong G đều thuộc F+ hay mọi FD trong G đều có thể inferred from F
+F và G equivalent nếu: F là phủ của G và G là phủ của F
+VD: Prove that F = {A → C, AC → D, E → AD, E → H} and G = {A → CD, E → AH} are equivalent
+Closure of F: giả sử F là 1 FD thì các FD khác suy ra được từ F dựa vào các định lý bth gọi là closure of F, là F+
+
+--> Kinh nghiệm xác định functional dependency(quan hệ phụ thuộc ->)
+Định luật armstrong biến đổi FD qua lại lẫn nhau: Các atts bên phải ta loại trừ dần vì nó phụ thuộc vào các atts bên trái. Cái nào k xh bên phải thì nó buộc là part of key
+VD: A->BC, CD->E và ABCDE thì bên phải ta loại dần là loại E vì CD có r xong ta loại BC và A có rồi thì còn AD k loại được nx nên AD làm minimal key
+
+-> Các bước tìm 3NF: - Viết functional dependency dạng chữ cái (A->B), và relation là tập hợp các trường R=(A,B)
+- Tìm minimal cover: Với A->BC thì tách ra A->B, A->C (bước làm đầu tiên); rút gọn tối thiểu các cái bên trái VD A->B, ABC->E thành A->B, AC->E. Rút gọn tương tự với các cái bên phải Vd D->E thì AFG->DHE có thể thành AFG->DH. Cũng dựa vào transitive rule VD B->A, B->D, D->A thì B->D, D->A tức B->A thừa (vẫn giữ nếu muốn giữ relation để query). Tương tự có đầy đủ ở vế trái suy ra được element bỏ đi ở vế phải VD A->B và AD->BF thành AD->F và A->B. Minimal cover vẫn thỏa mãn đầy đủ các cụm dependency
+- Tìm minimal key: lấy tất cả và bỏ từng chữ cái xuất hiện ở bên phải của các dependency nếu các chữ cái đã có có thể suy ra nó được, tức là dựa vào các chữ đã có thì vẫn có thể suy ra được tất cả các chữ như ban đầu. VD A->B, A->C thì lấy mỗi A.
+- Gộp các cục F vào thành từng Ri: làm ngược lại quy tắc 1 của minimal cover VD A->B, A->C thành ABC. Các cục Ri tối giản hơn Minimal cover vì có thể k còn giữ các dependency mà chỉ cần có đủ các chữ cái xuất hiện ít nhất 1 lần.
+- Tìm minimal key có được bao trong các Ri không, nếu không có tạo ra 1 Rkey mới là minimal key.
+
+Nhanh: A->BC thì minimal cover sẽ phân ra A->B, A->C; AB->C và AB->E thì là AB->CE; D->C, D->EB thì gom lại thành FD là D->EBC
+Bị quay vòng AB->C và C->A thì bỏ 1 cái đi, tùy cái nào cho kết quả ngắn hơn, vẫn giữ nếu muốn giữ relation để query.
+
+VD: AB->C và BC->A thì có thể dùng 1 table ABC với primary là AB, còn điều kiện BC->A ta dùng constraints CHECK để kiểm tra mà kp tạo 1 bảng mới để thể hiện cái dependency đó.
+
+-> VD: tập hợp universal attributes R(studentid, name, birth, advisor, department, semester, course, grade)
+Xây các functional dependencies: F={studentid->(name, birth); advisor->department; (studentid, semester, course)->(grade, advisor, department);} 
+Ký hiệu A B C D E F G H thì: F={A->BC; D->E; AFG->HDE}
+Tìm minimal cover là phụ thuộc tối thiểu dựa vào các cái trong F: {A->B, A-> C, D->E, AFG->HD} -> Minimal key cục này là AFG
+=> R1(ABC), R2(DE), R3(AFGDH) do R3 chứa AFG minimal key nên 3 cái này là 3 bảng 3NF luôn (nếu k thì mới phải thêm R4(AFG) vào)
+
+-> VD1: cần lưu Result (studentID, name, dob, gender, result, grade, subjectID, subjectName, credit) biết rằng grade phụ thuộc khoảng result VD [0,4) là F và [4,5) là D.
+Theo chuẩn 3NF thì phải chia nhỏ ra, giả sử gom grade và result thì có thể tách bảng Grade(min, max, grade) thay vì Grade (result, grade) cả triệu phần tử vì result là float.
+
+VD2 FD: ABC->D và D->A 
+C1: Ta chia theo cảm tính là R1(ABCD) với key là ABC vì ABC tối thiểu suy ra được cả ABCD.
+C2: VĐ là C1 k thể hiện được constraint D->A, k thể insert vào bảng A và D nếu B và C không có. Bản gốc chính là minimal cover để tạo bảng, còn 3NF (ABCD) có thể k bảo toàn FD
+
+VD3: A->B,BC->E,ED->A thì minimal cover vẫn thế(theo đúng 3 bước bên trên) và 3NF vẫn thế và thêm R4 (ACD) là key
+
+-> Tiêu chuẩn đánh giá sự tối ưu: 
+UNF: khi có cột là multivalue attributes. 
+1NF: trong 1 bảng k được có record multivalue, có thể value trùng
+2NF: mọi attributes trong bảng đều fully dependency vào primary key. VD primary key là 2 trường thì mọi key khác đều phụ thuộc vào cả 2 trường mới ra 1 giá trị chứ kp 1 trường
+3NF: tất cả atts đều fully và directly phụ thuộc vào primary key. Chứ kp là transitively dependent VD B phụ thuộc A, C phụ thuộc B thì C phụ thuộc A với A là primary key
+
+
+
+# Design quan hệ các bảng trong SQL
+Với 1-1: C1 là bảng 1 có 1 id của bảng 2 hoặc ngược lại, C2 là 1 bảng mới chứa cả 2 id của bảng 1 và 2.
+Với 1-n: C1 thì bắt buộc bảng n phải chứa identity của bảng 1, C2 là 1 bảng mới chứa PK của cả 2
+Với n-m: Chỉ có 1 cách là 1 bảng mới chứa id của cả 2 bảng
+VD quan hệ 1-1 teacher và class với quan hệ teacher dạy class đó. Ta k nên làm kiểu classID là foreign key của teacher mà nên dùng teacher làm foreign key của classID sẽ tốt hơn vì 1 class buộc có ít nhất 1 người quản lý nó chứ 1 teacher có thể k dạy class nào
+
+-> Design db cho multi-tenancy: giả sử ta cần tạo ứng dụng cung cấp cho nhiều tổ chức khác nhau, data riêng và k conflict của nhau. Có 3 kiến trúc:
+1) Single db for single tenant: Tính linh hoạt cao. Vd 1 tổ chức yêu cầu mã hóa dữ liệu, 1 tổ chức thì không, ta có thể dễ dàng làm được nhờ tách độc lập chúng; Tính bảo mật cao, phân quyền tốt. VD ta có thể cho tk admin của từng tenant chỉ được truy cập vào các db tương ứng => chi phí tốn kém
+2) Separate schema for each tenant: các tổ chức dùng chung 1 database cho 1 ứng dụng. Trong database có vô số table nhưng phân biệt table của tenant khác nhau bằng schema. 
+=> Bảo mật kém hơn nhưng chi phí rẻ và quản lý dễ dàng trong 1 db. Nếu số lượng tổ chức tăng cao sẽ khó quản lý.
+3) Shared schema for tenants: cách dễ nhất và chỉ phù hợp với các ứng dụng nhỏ. Tất cả dùng chung db và table nhưng phân biệt các tenant thông qua 1 trường là tenant id. 
+=> Bảo mật thấp vì chung 1 database, dễ conflict, K linh hoạt, query phức tạp hơn để lấy hay update data của riêng 1 tenant.
+
+-> Entity-relationship diagram (ERD) là vẽ mấy cái hộp hình thoi và hình chữ nhật nối với nhau biểu diễn quan hệ các bảng.
+Có thể chuyển đổi relationship giữa 2 entity có quan hệ m--n thành 1 entity mới. 
+VD1: Subject n -- <teach> -- m Lecture  chuyển thành  Subject 1 -- <taught> -- n Teaching n -- <teach> -- 1 Lecture  với attr của relation teach thành attr của entity Teaching
+Vd2: Client n -- <buy> -- m Product  chuyển thành  Client 1 -- have -- n Order n -- <is composed of> -- m Product => thực tế thg chia ra nhiều bảng ra như v vì TH2 ta có thể biết 1 product được mua cùng những product nào trong Order vì có bảng riêng order. C1 k thể hiện được nếu client mua 2 3 lần, khi đó buy phải có 1 trường quantity chẳng hạn

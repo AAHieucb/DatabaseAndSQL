@@ -1,17 +1,11 @@
-//!!!!!!!!!
 # Basic
 sp_helptext xem chức năng của lệnh
 
--> NULL + data = NULL.
-SS với null ra UNKNOWN = 1/2 nằm giữa TRUE và FALSE. VD UNKNOWN AND TRUE là UNKNOWN
+-> SS với null ra UNKNOWN = 1/2 nằm giữa TRUE và FALSE. VD UNKNOWN AND TRUE là UNKNOWN
 
 -> Các kiểu JOIN: FULL OUTER JOIN, LEFT JOIN, RIGHT JOIN, INNER JOIN (mặc định JOIN), CROSS JOIN (Self Join) tích đề các, NATURAL JOIN tự động trường trùng tên
 2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
 A Union B sẽ ra hợp của A và B với các trường định sẵn và nếu bị trùng nhiều cái trong 1 or cả 2 table sẽ bị rút gọn chỉ còn 1. VD: 1345 UNION với 24456 sẽ thành 123456
-
--> Data file trong SQL: - Tập tin lưu trữ dữ liệu chính (*.mdf) chứa dữ liệu khởi đầu
-- Tập tin dữ liệu thứ cấp (*.ndf) chứa dữ liệu phát sinh
-- Tập tin nhật ký thao tác (*.ldf) log thao tác, dùng để khôi phục db khi sự cố
 
 -> Schema là 1 namespace để gom các table chung 1 đặc điểm để dễ quản lý, mặc định là dbo. 
 Dự án lớn thường chia phạm vi lớn, VD chia 1 schema 1 tenant khi dùng multi-tenant và phân quyền user được dùng schema nào.
@@ -30,7 +24,6 @@ Có thể tạo custom type với CREATE TYPE, vào db -> Programmability -> Typ
 -> Tên cột có space có thể nhét trong '' -> VD: SELECT @count AS 'Count number'; 
 LIKE: "_r%" chứa r ở vị trí thứ 2. h[oa]t tìm hot, hat; h[^oa]t tìm hit và né hot hat ra tức ^ là phủ định trong []; c[a-c]t tìm tất cả cat, cbt, cct tức - là trong 1 khoảng 
 
--> Parameterize chống SQL Injection
 -> Cách clone type bảng 1 vào bảng 2 nhưng khởi tạo rỗng: SELECT * INTO CloneTable FROM sales.staffs WHERE 6>9
 
 -> Các loại key
@@ -41,10 +34,29 @@ Alternate key: là candidate key nhưng k được chọn là primary key
 
 
 
+
+# SSMS 
+SSMS quản lý db qua giao diện, phải kết nối vào db server lưu data là SQL Server. Mở ct SQLCMD để dùng câu lệnh SQL trên terminal được. 
+Tương tự có Azure Data Studio.
+
+-> Setup user => ref tới "NodeJS / Kt ngoài / Config SSMS kết nối được với mssql nodejs trên máy win (hoạt động tốt năm 2022)"
+Tạo tk: Security -> New Login -> Tạo account, set default database, Status set login là enabled và grant quyền access database engine -> rightclick database -> Security -> check SQL Server and Window Authentication mode -> vào database nào đó -> New User -> đặt và chọn User là tk login vừa tạo -> cấp quyền gì cho nó với database này -> đăng nhập ok, vì 1 tk phải có ít nhất 1 database nào đó truy cập được thì mới đăng nhập được
+Để dùng sa: rightclick sa -> đổi mật khẩu tùy ý -> set up quyền -> đăng nhập được -> tk sa k cần cấp quyền user cho database nào hết vì nó mặc định vào được tất cả
+Có thể tùy chỉnh quyền hạn của tk, add thêm nhiều user truy cập vào database, nhưng 1 db chỉ có 1 db_owner duy nhất. 
+=> Thường sẽ tạo user riêng cho server dùng, còn tk sa hoặc window authentication chỉ cho admin dùng để quản lý mọi thứ.
+
+Để xoá 1 tk, ta phải xoá nó trong từng db và trong mục security chung của database. Nếu tk đó owned 1 schema của database thì thì phải đổi quyền đó sang cho ngừoi khác để nó k owned gì cả mới xoá được.
+
+
+
 # Cơ chế backup database
 Backup database FULL sẽ lưu 1 bản copy full database tại thời điểm đó vào 1 file
 Còn WITH DIFFERENTIAL sẽ backup database khác gì so với lần fullbackup gần nhất. Để backup 1 differential thì phải đã từng backup full r.
 Ta có thể rightclick database -> tasks -> Backup
+
+-> Data file trong SQL: - Tập tin lưu trữ dữ liệu chính (*.mdf) chứa dữ liệu khởi đầu
+- Tập tin dữ liệu thứ cấp (*.ndf) chứa dữ liệu phát sinh
+- Tập tin nhật ký thao tác (*.ldf) log thao tác, dùng để khôi phục db khi sự cố
 
 
 
@@ -57,7 +69,7 @@ Mặc định là NO ACTION khi xoá sẽ trả lỗi và dữ liệu bảng cha
 
 
 
-# Xoá database
+# Xoá bảng
 Ta nên hạn chế việc xóa data, mà chỉ nên đánh dấu là data k còn được dùng nữa thôi. 
 -> DELETE: xóa mọi record or xóa vài record thỏa mãn điều kiện. Khi xóa cả bảng bị chậm hơn TRUNCATE khi SQL Server phải duyệt qua từng record. Có thể khôi phục lại bằng ROLLBACK command nếu xóa bằng transaction và chưa commit. IDENTITY sẽ tiếp tục tăng. DELETE sẽ lock row khi xóa từng dòng.
 -> TRUNCATE: sẽ xóa file lịch sử transaction của bảng và giải phóng bộ nhớ của bảng luôn nên tốc độ nhanh hơn. Reset identity bảng về 0, dùng table lock, k thể ROLLBACK khôi phục
@@ -153,83 +165,6 @@ END;
 
 VD dùng TRIGGER cho cả 2 operations INSERT và UPDATE thì dùng FOR INSERT, UPDATE cách nhau dấu phẩy ez. 
 VD ta có thể check đk trigger kiểu: DECLARE @oldprice decimal(10,2), @newprice decimal(10,2); SELECT @oldprice = Price FROM deleted; IF(ISNULL(@oldprice, 0) = 0) => khi insert thì bảng deleted k có data sẽ chạy lệnh trong if
-
-
-
-# Cơ chế database lưu trong storage
-Data được lưu trên đĩa cứng or mainmem như bth. Vc truyền data giữa đĩa cứng và main mem thông qua units of disk blocks.
-Disk defragmentation trong máy tính nếu right click properties sẽ thấy ổ đĩa chia theo kiểu so le: xanh trắng xanh xanh xanh trắng xanh xanh xanh
-=> VD các vùng màu xanh là ứng dụng chạy. Đáng lẽ nó phải kín xanh hết nhưng vẫn dôi ra các vùng màu trắng là do ứng dụng dùng xong thì bộ nhớ giảm đi làm dôi ra các phần thừa. Về sau các ứng dụng dùng thêm vùng nhớ thì append dùng tiếp vào các phần đằng sau vì các vùng trắng k đủ thành ra 1 ứng dụng nhưng lại lưu ở nhiều vùng nhớ rời rạc làm nó truy cập bị chậm. Các phần mêm disk optimization chính là cơ chế rearrange lại các vùng nhớ làm cho ứng dụng sau khi cài và sử dụng sẽ lưu về các vùng liên tiếp nhau trên disk.
-
--> Cơ chế: Khi ứng dụng chạy sẽ lưu theo các disk block, giả sử mỗi cục [] là 1 block, mỗi lần read write query DB sẽ access theo 1 lượng memory page, giả sử ở đây memory page cho query tới 2 block, ứng dụng ta chạy có màu đỏ:
-[đỏ][trắng][trắng][đỏ][trắng][đỏ][trắng][trắng]...
-[         ]       [         ][         ]
-=> Do ứng dụng được lưu rời rạc trên đĩa làm nó tốn rất nhiều query để lấy được data. VD như trên thì các query bị thừa khi query cái trắng là vùng nhớ trống or vùng nhớ của 1 ứng dụng khác k cần thiết => ứng dụng disk optimization cơ chế sẽ đưa các vùng nhớ của cùng ứng dụng về sát lại nhau:
-[đỏ][đỏ][đỏ][đỏ][trắng][trắng][trắng]...
-[      ][      ]
-=> read write I/O chơi đúng 2 memory page query là xong. 
-
-
-
-# Cơ chế xử lý query
-Query của user --Parser--> Relational Algebric(RA) --Optimizer--> Query execution plan. Optimizer dùng equivalence transformation chuyển sang code tương đương nhưng tốc độ nhanh hơn: Ưu tiên chạy select và projection trước, logic và join thực hiện sau cùng khi data đã được lọc nhỏ r.
-VD: R1 có n phần tử, R2 có m phần tử:
-R1 join R2 thì số lần duyệt = n + n x m tức duyệt R1 n lần, duyệt R2 n x m lần
-R2 join R1 thì duyệt R1 n x m lần, duyệt R2 m lần tức m + n x m
-=> Nếu n << m thì tốc độ join của TH1 nhanh hơn TH2 rất nhiều. Đó là công việc của optimizer.
-
--> Algebric expression:
-Natural join là A |X| B. Innner join ký hiệu giống và có thêm điều kiện nhỏ ở bên dưới. VD: A |X|<a>10> B. INNER JOIN cũng gọi là theta join
-VD1: SELECT * FROM R1 WHERE R1.A=X AND R1.C > Y => o<R1.A=X ^ R1.C>Y>(R1)
-VD2: SELECT St.* FROM Student St, Subject S, Enrollment E WHERE St.StudenId = E.StudenId AND E.Sid = S.Sid AND Sname = 'Database' AND grade = 'A' 
-C1: n<St.*>(o<sname='Database'^grade='A'>(St*E*S)) -> tức là natural join 3 cái r check điều kiện lồng dần dần
-C2: n<St.*>(St*(o<grade='A'>E)*(o<sname='Database'>S))
-=> Nhìn chung 2 cách tốc độ ngang nhau nhưng nếu kích thước của (o<grade='A'>E) nhỏ hơn đáng kể so với (E) thì cách 2 nhanh hơn cách 1.
-VD3: R1 có n phần tử, R2 có m phần tử
-R1 join R2 thì số lần duyệt = n + n x m tức duyệt R1 là n, duyệt R2 là n x m 
-R2 join R1 thì duyệt R1 n x m, duyệt R2 là m tức m + n x m
-=> Nếu n << m thì tốc độ join của TH1 nhanh hơn TH2 nhiều => optimizer cần chuyển đổi được như v
-VD4: o<O1>(E1 x E2) = E1|X|<O1>(E2) thì cách 1 sẽ tạo cartesian product r dùng select cái thỏa mãn. Cách 2 thì lọc trước r mới lấy cartesian sẽ nhanh hơn
-VD5: E1|X|(E2|X|E3) = (E1|X|E2)|X|E3 nếu E2|X|E3 << E1|X|E2 thì bên trái rẻ hơn
-VD6: SELECT Name FROM BORROWER as B WHERE NOT EXIST ( SELECT * FROM BOOK_LOANS as BL WHERE B.CardNo=BL.CardNo) => quy về join để convert sang dạng số học
-=> Project(name)(S(card_no)(b)-S(card_no(BL)) join B) 
-VD7: select E.fname, E.lname, E.address from employee as E NATURAL JOIN works_on as W NATURAL JOIN project as P and PLocation = “Houston” and not exist (select*From Dept_Location Where DNumber = E.DNo and DLocation = “Houston”)
-=> Project(E.fname, E.lname, E.address)(Project(DNO)(S(PLocation='Houston')(E |><| W |><| P)) - Project(DNO)(S(DLocation='Houston')(Dept_Location)) |><| (E|><|W|><|P))
-
-
-
-# Design quan hệ các bảng trong SQL
-Với 1-1: C1 là bảng 1 có 1 id của bảng 2 hoặc ngược lại, C2 là 1 bảng mới chứa cả 2 id của bảng 1 và 2.
-Với 1-n: C1 thì bắt buộc bảng n phải chứa identity của bảng 1, C2 là 1 bảng mới chứa PK của cả 2
-Với n-m: Chỉ có 1 cách là 1 bảng mới chứa id của cả 2 bảng
-VD quan hệ 1-1 teacher và class với quan hệ teacher dạy class đó. Ta k nên làm kiểu classID là foreign key của teacher mà nên dùng teacher làm foreign key của classID sẽ tốt hơn vì 1 class buộc có ít nhất 1 người quản lý nó chứ 1 teacher có thể k dạy class nào
-
--> Design db cho multi-tenancy: giả sử ta cần tạo ứng dụng cung cấp cho nhiều tổ chức khác nhau, data riêng và k conflict của nhau. Có 3 kiến trúc:
-1) Single db for single tenant: Tính linh hoạt cao. Vd 1 tổ chức yêu cầu mã hóa dữ liệu, 1 tổ chức thì không, ta có thể dễ dàng làm được nhờ tách độc lập chúng; Tính bảo mật cao, phân quyền tốt. VD ta có thể cho tk admin của từng tenant chỉ được truy cập vào các db tương ứng => chi phí tốn kém
-2) Separate schema for each tenant: các tổ chức dùng chung 1 database cho 1 ứng dụng. Trong database có vô số table nhưng phân biệt table của tenant khác nhau bằng schema. 
-=> Bảo mật kém hơn nhưng chi phí rẻ và quản lý dễ dàng trong 1 db. Nếu số lượng tổ chức tăng cao sẽ khó quản lý.
-3) Shared schame for tenants: cách dễ nhất và chỉ phù hợp với các ứng dụng nhỏ. Tất cả dùng chung db và table nhưng phân biệt các tenant thông qua 1 trường là tenant id. 
-=> Bảo mật thấp vì chung 1 database, dễ conflict, K linh hoạt, query phức tạp hơn để lấy hay update data của riêng 1 tenant.
-
--> Entity-relationship diagram (ERD) là vẽ mấy cái hộp hình thoi và hình chữ nhật nối với nhau biểu diễn quan hệ các bảng.
-Có thể chuyển đổi relationship giữa 2 entity có quan hệ m--n thành 1 entity mới. 
-VD1: Subject n -- <teach> -- m Lecture  chuyển thành  Subject 1 -- <taught> -- n Teaching n -- <teach> -- 1 Lecture  với attr của relation teach thành attr của entity Teaching
-Vd2: Client n -- <buy> -- m Product  chuyển thành  Client 1 -- have -- n Order n -- <is composed of> -- m Product => thực tế thg chia ra nhiều bảng ra như v vì TH2 ta có thể biết 1 product được mua cùng những product nào trong Order vì có bảng riêng order. C1 k thể hiện được nếu client mua 2 3 lần, khi đó buy phải có 1 trường quantity chẳng hạn
-
-
-
-# Functional dependency
-Có 3 kiểu FD: full, partial và transitive
-Transitive là kiểu A->B->C thì A->C là 1 transtive FD tạo từ 2 FD kia
-
--> F là 1 phủ của G nếu: mọi FD trong G đều thuộc F+ hay mọi FD trong G đều có thể inferred from F
-F và G equivalent nếu: F là phủ của G và G là phủ của F
-VD: Prove that F = {A → C, AC → D, E → AD, E → H} and G = {A → CD, E → AH} are equivalent
-Closure of F: giả sử F là 1 FD thì các FD khác suy ra được từ F dựa vào các định lý bth gọi là closure of F, là F+
-
--> Kinh nghiệm xác định functional dependency(quan hệ phụ thuộc ->)
-Định luật armstrong biến đổi FD qua lại lẫn nhau: Các atts bên phải ta loại trừ dần vì nó phụ thuộc vào các atts bên trái. Cái nào k xh bên phải thì nó buộc là part of key
-VD: A->BC, CD->E và ABCDE thì bên phải ta loại dần là loại E vì CD có r xong ta loại BC và A có rồi thì còn AD k loại được nx nên AD làm minimal key
 
 
 
@@ -388,4 +323,3 @@ Cách khác là đánh index kèm 1 constant expression k thể NULL như này: 
 Nếu dùng kèm 1 user-defined function thay vì constant expression, Oracle database k có cách nào biết được liệu function đó có null hay không nên sẽ full scan table để k bỏ sót bản ghi nào. Ta có thể tự ý thêm IS NOT NULL cho function đó thì Oracle tối ưu sẽ tự hiểu là các data cần tìm chỉ nằm trong index nên sẽ dùng index. VD: 
 SELECT * FROM employees WHERE date_of_birth IS NULL AND blackbox(employee_id) IS NOT NULL
 Với blackbox là user-defined function chả cần biết có NULL hay không nhưng Oracle sẽ dùng index của date_of_birth để search vì ta có IS NOT NULL. Hàm blackbox luôn trả TRUE nên k ảnh hưởng tới query.
-
