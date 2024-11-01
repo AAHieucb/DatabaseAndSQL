@@ -7,6 +7,12 @@ sp_helptext xem chức năng của lệnh
 2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
 A Union B sẽ ra hợp của A và B với các trường định sẵn và nếu bị trùng nhiều cái trong 1 or cả 2 table sẽ bị rút gọn chỉ còn 1. VD: 1345 UNION với 24456 sẽ thành 123456
 
+--> Nhiều kiểu join khác không hỗ trợ sẵn
+- Semi join: chọn phần tử bảng A khớp với 1 or nhiều hàng bảng B nhưng k gồm các cột bảng B
+SELECT A.* FROM A WHERE EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id )
+- Anti join: ngược lại chọn các hàng bảng A mà k có hàng tương ứng trong bảng B
+SELECT A.* FROM A WHERE NOT EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id );
+
 -> Schema là 1 namespace để gom các table chung 1 đặc điểm để dễ quản lý, mặc định là dbo. 
 Dự án lớn thường chia phạm vi lớn, VD chia 1 schema 1 tenant khi dùng multi-tenant và phân quyền user được dùng schema nào.
 
