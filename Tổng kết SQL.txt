@@ -175,6 +175,9 @@ VD 2 bảng join với nhau 1 trường thì đánh index trường đó ở 1 t
 -> PRIMARY KEY là clustered index. Nó sắp xếp lại dữ liệu gốc của bảng theo chỉ mục thành các khối chứa đúng data liền nhau trên bộ nhớ thì 1 page table truy cập được nhiều hơn
 NON_CLUSTERED thì bản chất nó tạo 1 node mới trên cây trỏ tới address thực tế, nhưng k sắp xếp lại disk nên hiện tương data so le có thể làm page table k query tối ưu.
 
+Primary key là clustered index duy nhất vì nó đổi thứ tự lưu data trên data gốc. Chạy lệnh CREATE INDEX trên 2 cột khác nhau thì 2 cột đó mặc định dùng non-clustered index, chúng lưu chỉ mục ở 1 nơi riêng (BTree) và ta phải truy vấn đến đó trước để lấy địa chỉ rồi mới truy cập vào data
+=> Đánh index làm tốc độ update data chậm đi, non-clustered index còn tốn thêm không gian lưu trữ. Do đó k nên đánh chỉ mục khi bảng có kích thước nhỏ, hay được cập nhập dữ liệu thường xuyên hoặc các cột có nhiều giá trị NULL
+
 -> Multicolumns index và multiple indexes. VD: age, name, id ta đánh 3 non clustered index độc lập hay đánh 1 index cho cả 3 trường
 Nếu mỗi trường 1 index, có thể search tốc độ nhanh theo từng trường. Nếu search theo cả 3 trường thì chỉ search nhanh được 1 trường đầu tiên trong đó thôi.
 Nếu đánh multicolumn index cho cả (age, name, id) thì tốc độ search (age) or (age, name) or (age, name, id) cho tốc độ nhanh hơn bth. Nhưng nếu chỉ search trường age cho tốc độ k nhanh bằng đánh chỉ 1 index cho age. Còn nếu search theo id or name riêng sẽ k dùng index nên chậm.
@@ -222,6 +225,8 @@ Nếu dùng table access full thì nó biết là phải check cả bảng nên 
 - Bitmap index: loại chỉ mục trong DB khi tìm kiếm các giá trị không liên tục hoặc trường có số lượng giá trị duy nhất nhỏ. Tốc độ update chậm hơn các loại index khác.
 Số lượng bitmap index bằng số lượng giá trị unique. VD có thể đánh index cho trường gender khi có 1 triệu bản ghi cũng ok vì chỉ có 2 giá trị duy nhất. VD 1 bảng 5 row với trường color có 3 giá trị duy nhất theo thứ tự là: RGGGB. Đánh bitmap index cho cột color sinh ra 3 bitmap index là: Red: 10000; Green: 01110; Blue: 00001
 => VD search theo color green thì nhìn vào bitmap index của color là thấy ngay row 2,3,4 có color Green. Nó dùng các phép logic để so sánh và khi update
+
+-> Đánh index trường text và search trường đó thì chỉ có tác dụng với 'pattern%', còn '%pattern%' sẽ k dùng index. Để tốc độ cao phải CREATE FULLTEXT CATALOG để tạo full text search index riêng trong SQL Server.
 
 
 
