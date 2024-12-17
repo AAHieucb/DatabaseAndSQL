@@ -205,7 +205,7 @@ Duyệt cây tìm leafnode nhanh nhưng duyệt từng leaf node lấy data th�
 => Tốc độ tìm nhanh và nếu tăng số lượng bản ghi tới vài triệu, độ sâu của cây vẫn rất nhỏ. VD 1 node có 100 index và tăng 1 level, lượng index có thể lưu sẽ tăng cả trăm lần
 
 -> 4 kiểu lấy data từ DB:
-- Index unique scan: Đánh index cho các cột mà tổ hợp có giá trị unique k trùng nhau và search trên đó với condition cho output là 1 row duy nhất. Ta chỉ cần duyệt cây tìm ra đúng 1 node r lấy data từ 1 block duy nhất. Tốc độ luôn là nhanh nhất có thể.
+- Index unique scan (index seek): Đánh index cho các cột mà tổ hợp có giá trị unique k trùng nhau và search trên đó với condition cho output là 1 row duy nhất. Ta chỉ cần duyệt cây tìm ra đúng 1 node r lấy data từ 1 block duy nhất. Tốc độ luôn là nhanh nhất có thể.
 Khi đánh index cho 1 cột không là primary key thì trong tree node vẫn lưu cả primary key để tiện tham chiếu về sau.
 
 - Index range scan: Duyệt cây rồi duyệt theo leaf node tìm tất cả nhiều bản ghi thỏa mãn. BTree có range query nhanh
@@ -227,6 +227,18 @@ Số lượng bitmap index bằng số lượng giá trị unique. VD có thể 
 => VD search theo color green thì nhìn vào bitmap index của color là thấy ngay row 2,3,4 có color Green. Nó dùng các phép logic để so sánh và khi update
 
 -> Đánh index trường text và search trường đó thì chỉ có tác dụng với 'pattern%', còn '%pattern%' sẽ k dùng index. Để tốc độ cao phải CREATE FULLTEXT CATALOG để tạo full text search index riêng trong SQL Server.
+
+-> Khi 1 bảng k đánh index, mặc định nó là heap table với data xếp lộn xộn và luôn tìm tuần tự. Heap table trong sql chỉ tồn tại khi table không được đánh index
+Khi đánh cluster index thì heap table thành clusterd index table
+Non clustered index tạo ra 1 cấu trúc riêng biệt ref tới dữ liệu gốc và klq đến dữ liệu gốc.
+Chú ý index scan là duyệt qua mọi toàn bộ chỉ mục để tìm kiếm dữ liệu (theo key), table scan là duyệt toàn bảng (theo rowid = số trang, file, row)
+
+VD nếu bảng đánh non-clustered index, select where dùng index nhưng cần lấy các trường ngoài index:
+- Nếu bảng k đánh clustered index, nó dùng table scan theo rowid tìm tiếp để lấy đủ trường vì con trỏ của non-clustered index trỏ tới rowid.
+- Nếu bảng đánh clustered index, non clustered index sẽ ref tới key rowid luôn và dùng index scan tìm lấy các trường còn lại. Tức con trỏ của non-clustered index trỏ tới Clustered Index Key.
+=> Thành ra nếu đánh non-clustered index mà k có clustered index, xong lấy nhiều trường ngoài non-clustered index, nó vừa tìm trong non-clustered index tree, vừa dùng table scan thì thậm chí lâu hơn duyệt table scan luôn. Do đó nên đánh thêm 1 clustered index hoặc dùng INCLUDE trong non-clustered index để thêm các cột thường xuyên truy xuất
+
+Trong SSMS có button để check query plan => Kết quả đọc từ phải sang trái. Bôi đậm 2 query khi check sẽ hiện cost ss 2 queries
 
 
 
