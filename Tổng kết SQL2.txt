@@ -195,3 +195,40 @@ Deferred join có nhiều kiểu phức tạp, tức là việc ta chia ra bản
 Deferred join thường đem lại hiệu suất tốt hơn nếu bảng con có thể tìm theo index với tốc độ cao và làm giảm số lượng record đi đáng kể. Nếu không thì k nên dùng
 Thường ta kqt trừ khi gặp vđ về hiệu suất. NN vì optimizer đôi khi sai, phải check bằng EXPLAIN mới thấy nó k dùng index dù có đánh index.
 
+
+
+# SQLite
+Nếu có ít data, việc dùng db lớn sẽ phí phạm. SQLite hiện đã cải tiến đủ mạnh để dùng cho production
+PocketBase giải pháp nhỏ gọn và nhẹ hơn thay cho FireBase, dùng làm backend có SQLite làm main db.
+
+Transaction mode default của SQLite là deferred (BEGIN DEFERRED TRANSACTION) thì các operation read, write trong đó là rời rạc và mỗi operation là 1 transaction. Nếu 2 lệnh write cùng thực hiện đồng thời thì 1 lệnh sau sẽ lỗi SQL_BUSY.
+SQLite fix bằng mode IMMEDIATE, bất cứ khi nào read hay write đều dùng write lock. Các operation write sau sẽ đưa vào queue chứ k báo SQL_BUSY. Còn mode EXCLUSIVE sẽ lock cả operation read và write khi chạy.
+Còn có journal mode mặc định là rollback journal, sẽ copy toàn bộ data page sắp bị thay đổi vào 1 file riêng để khi fail sẽ rollback, nhưng tốn mem và chậm do phải copy bất cứ khi nào write. Cách khác là dùng write-ahead logging (WAL) là ghi thay đổi ra 1 file riêng trước khi commit chính thức vào db. Khi đọc, nó check WAL file xem thay đổi nào chưa được commit và dùng data mới nhất.
+
+SQLite chỉ là 1 file nên có thể backup bằng cách lưu lên S3 bucket. Có hàm VACUUM INTO giúp tạo file backup db nén nhỏ lại, hoặc lưu cả file db gốc cũng được.
+VD: lập lịch trong linux bằng crontab tự động backup db lên S3 sau mỗi 1 ngày.
+Có thể dùng Litestream là tool sao lưu db SQLite realtime, nó băt sự thay đổi của WAL file và replicate đăng lên cloud provider. Có thể quay lại bất cứ thời điểm nào.
+
+
+
+# PostgresSQL
+Neon Postgre là đám mây PostgreSQL, giống mongo atlas dùng cho mongodb
+psql là package client tương tác với PostgreSQL server
+
+-> Tool browser connect với postgre db: https://psql.sh/ 
+Browser dùng http, websocket. Còn connect tới db phải dùng TCP thuần. Họ tạo 1 lớp proxy từ websocket để browser có thể connect vào db được.
+
+-> Wait Events: các loại sql server khác cũng có wait events nhưng cơ chế khác nhau
+Nó chứa thông tin về nguyên nhân hệ thống bị delay vì đang chờ gì đó:
+Lock Event khi tx thực hiện bị lock với process khác
+Buffer Pin Event khi 1 process đang giữ buffer làm các process khác k thể truy cập
+I/O Event khi bị delay do read/write disk lâu
+Timeout Event khi process đang chủ động chờ 1 khoảng thời gian được config sẵn
+Client Event khi bị delay connection giữa client và db
+Replication Event khi có replication delay.
+Xem Wait Events từ pg_stat_activity và pg_wait_events
+VD có thể visualize Wait Event xem trên pgAdmin hay Prometheus/Grafana
+VD có thể setup alert khi có wait events quá lâu.
+URL: https://stormatics.tech/blogs/understanding-wait-events-in-postgresql
+
+

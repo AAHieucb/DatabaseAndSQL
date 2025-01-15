@@ -92,3 +92,4 @@ C2: tạo trong control panel trong UserDSN nguồn open database connectivity k
 -> Stored database -> internal schema (internal level) -> conceptual schema -> many external views for each end user
 => internal schema là file lưu key-val; conceptual level là các bảng và query, external view là view thấy data trong SQL
 
+
