@@ -212,7 +212,8 @@ Có thể dùng Litestream là tool sao lưu db SQLite realtime, nó băt sự t
 
 
 # PostgresSQL
-Neon Postgre là đám mây PostgreSQL, giống mongo atlas dùng cho mongodb
+Neon Postgre là đám mây PostgreSQL, giống mongo atlas dùng cho mongodb. Thay thế cho AWS Aurora PostgreSQL. 
+Có thể dùng luôn vercel postgre db ok, đặc biệt nếu dùng nextjs thì nên dùng.
 psql là package client tương tác với PostgreSQL server
 
 -> Tool browser connect với postgre db: https://psql.sh/ 
