@@ -74,3 +74,5 @@ VD quan hệ 1-1 teacher và class với quan hệ teacher dạy class đó. Ta 
 Có thể chuyển đổi relationship giữa 2 entity có quan hệ m--n thành 1 entity mới. 
 VD1: Subject n -- <teach> -- m Lecture  chuyển thành  Subject 1 -- <taught> -- n Teaching n -- <teach> -- 1 Lecture  với attr của relation teach thành attr của entity Teaching
 Vd2: Client n -- <buy> -- m Product  chuyển thành  Client 1 -- have -- n Order n -- <is composed of> -- m Product => thực tế thg chia ra nhiều bảng ra như v vì TH2 ta có thể biết 1 product được mua cùng những product nào trong Order vì có bảng riêng order. C1 k thể hiện được nếu client mua 2 3 lần, khi đó buy phải có 1 trường quantity chẳng hạn
+
+

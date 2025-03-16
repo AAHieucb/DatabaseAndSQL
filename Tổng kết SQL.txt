@@ -119,7 +119,7 @@ Temporary table lưu trong bộ nhớ vật lý, có thể overhead bộ nhớ v
 
 -> Biến table: ra khỏi phạm vi là 1 câu truy vấn, function hoặc procedure sẽ bị xóa. Không có query optimizer xử lý nên hiệu suất thấp, chỉ dùng với query nhỏ đơn giản.
 Nó k mạnh như bảng tạm như k thể alter hay k thể đánh index, tốn ít bộ nhớ hơn. Còn bảng tạm thì dùng được như 1 bảng thật. Nó sống trong tempdb như bảng tạm chứ kp trong bộ nhớ
-DECLARE <biến> TABLE(...)   hoặc   INSERT INTO <biến> SELECT ...
+DECLARE <biến> TABLE(...)  hoặc  INSERT INTO <biến> SELECT ...
 
 
 
