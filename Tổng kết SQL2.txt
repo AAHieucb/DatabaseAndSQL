@@ -195,7 +195,9 @@ Nếu list nhỏ thì trong postgre có ON CONFLICT DO NOTHING. Trong MySQL có 
 => Bản chất chúng dùng với list nhỏ là vì check từng dòng, tồn tại thì bỏ qua, k tồn tại thì add. Tức add từng row một.
 
 Với list lớn, cần đảm bảo cột so sánh được đánh index. Ta select ra cái list mà không có trong table với UDPLock và SERIALIZE rồi insert vào thôi. 
-VD: SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+Chú ý WITH(HOLDLOCK) và WITH(SERIALIZE) là 1, dùng trong SQL Server. 
+Nó khá giống SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; áp dụng cho cả tx. WITH(SERIALIZE) được viết ở 1 câu lệnh cụ thể nhưng khoá của nó được áp dụng cho đến khi tx kết thúc.
+VD implement insert if not exist bằng SQL thuần:
 BEGIN TRANSACTION ;
 INSERT INTO target_table (id, col1)
 SELECT s.id, s.col1
@@ -209,7 +211,7 @@ ON s.id = t.id
 WHERE t.id IS NULL;
 COMMIT TRANSACTION;
 
-Hoặc dùng XLOCK cản mọi thứ của cả table:
+VD2 tương tự nhưng dùng XLOCK cản mọi thứ của cả table:
 VD: BEGIN;
 LOCK TABLE target_table IN SHARE ROW EXCLUSIVE MODE;
 INSERT INTO target_table (id, col1)
@@ -223,6 +225,29 @@ WHERE NOT EXISTS (
   SELECT 1 FROM target_table t WHERE t.id = s.id
 );
 COMMIT;
+
+VD3 retry logic cho đơn giản, éo cần qt chỗ khác viết như nào, đảm bảo luôn đúng:
+try {
+  let rowsToAdd = list;
+  const maxRetry = 20;
+  let flagToRetry = 0; 
+  do {
+    try {
+      let rows = addToDb(rowsToAdd);
+      logger("Try to add::${rowsToAdd.length}, added:${rows}");
+      flagToRetry = 0;
+    } catch (ex) {
+      logger("Failed to add::{flagToRetry}, ex::{ex.message}");
+      if (ex.message.includes("duplicate key")) {
+        flagToRetry++;
+        var listInDb = getDbByIds(rowsToAdd.map(r => r.id));
+        rowsToAdd = rowsToAdd.filter(r => !listInDb.includes(r.id));
+      } else throw;
+    }
+  } while(rowsToAdd.length > 0 && flagToRetry > 0 && flagToRetry < maxRetry);
+} catch (ex) {
+  logger("Failed to insert db::{ex.message}");
+}
 
 
 
