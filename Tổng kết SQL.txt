@@ -234,6 +234,17 @@ Số lượng bitmap index bằng số lượng giá trị unique. VD có thể 
 
 -> Đánh index trường text và search trường đó thì chỉ có tác dụng với 'pattern%', còn '%pattern%' sẽ k dùng index. Để tốc độ cao phải CREATE FULLTEXT CATALOG để tạo full text search index riêng trong SQL Server.
 
+--> Bài toán search 2 trường chứa <search_text> ở bất cứ vị trí nào
+- Full text index có cơ chế tokenize, chỉ được khi search_text là 1 token chứ chứa tùy ý 1 phần của từ khác sẽ k thể search. Full text index phải dùng CONTAIN không dùng được LIKE
+- Nếu biết trước các từ có thể search thì dùng computed column với CHARINDEX kiểu thêm 1 column lưu lại tần suất xuất hiện của 1 từ:
+ALTER TABLE MyTable
+ADD HasABC AS CASE WHEN CHARINDEX('abc', MyColumn) > 0 THEN 1 ELSE 0 END PERSISTED;
+Hoặc dùng các kiểu computed column khác là tạo ra cột mới chứa đặc điểm liên quan đến phần text cần search.
+- Dùng Gin với pg_trgm là kiểu đặc biệt chỉ có trên PostgreSQL
+- Nếu search kiểu startsWith <search_text> thì dùng index bth cũng tự hỗ trợ.
+- Buộc phải dùng LIKE vì SQL k có cách nào khác. 
+Nếu cần search nhiều trường (>2) thì nên tạo 1 cột concat các cột khác vào và LIKE 1 lần trên cột đó thay vì LIKE OR nhiều lần
+
 -> Khi 1 bảng k đánh index, mặc định nó là heap table với data xếp lộn xộn và luôn tìm tuần tự. Heap table trong sql chỉ tồn tại khi table không được đánh index
 Khi đánh cluster index thì heap table thành clusterd index table
 Non clustered index tạo ra 1 cấu trúc riêng biệt ref tới dữ liệu gốc và klq đến dữ liệu gốc.
@@ -244,7 +255,10 @@ VD nếu bảng đánh non-clustered index, select where dùng index nhưng cầ
 - Nếu bảng đánh clustered index, non clustered index sẽ ref tới key rowid luôn và dùng index scan tìm lấy các trường còn lại. Tức con trỏ của non-clustered index trỏ tới Clustered Index Key.
 => Thành ra nếu đánh non-clustered index mà k có clustered index, xong lấy nhiều trường ngoài non-clustered index, nó vừa tìm trong non-clustered index tree, vừa dùng table scan thì thậm chí lâu hơn duyệt table scan luôn. Do đó nên đánh thêm 1 clustered index hoặc dùng INCLUDE trong non-clustered index để thêm các cột thường xuyên truy xuất
 
-Trong SSMS có button để check query plan => Kết quả đọc từ phải sang trái. Bôi đậm 2 query khi check sẽ hiện cost ss 2 queries
+-> Trong SSMS có button để check query plan => Kết quả đọc từ phải sang trái. Bôi đậm 2 query khi check sẽ hiện cost ss 2 queries
+Đánh clusterted index thì tree chứa mọi trường. Còn tree của non-clustered index trường displayname chỉ chứa id và displayname thôi.
+Nên nếu search displayname và SELECT Id sẽ thấy query plan là non-clustered index scan, SELECT * thì là clustered index scan vì nó lấy luôn từ đó thay vì search trên non-clustered tree rồi search tiếp clustered tree.
+Lưu ý LIKE %% kbh dùng index nhưng hiện như vậy là bảo đang search trên tree nào chứ kp kiểu search, nó vẫn sẽ search full table thôi.
 
 
 
