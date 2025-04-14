@@ -24,6 +24,7 @@ DECLARE @v3 Varchar(10) = 'Hello3'; -- k chứa Unicode, cấp phát động max
 DECLARE @v4 Nvarchar(20) = N'Nguyễn Thụ Hiếu'; -- chứa Unicode, cấp phát động max n ô nhớ. Để nhập Unicode dùng cú pháp N'<chữ>'
 Kiểu Text: k chứa Unicode, cấp phát động theo độ dài chuỗi nhập vào chứ kp bằng số như trên
 Kiểu Ntext: chứa unicode, cấp phát động theo độ dài chuỗi nhập vào
+uniqueidentifier
 
 Có thể tạo custom type với CREATE TYPE, vào db -> Programmability -> Types -> User-Defined Data Types sẽ hiện các type ta định nghĩa
 
@@ -360,3 +361,6 @@ Cách khác là đánh index kèm 1 constant expression k thể NULL như này: 
 Nếu dùng kèm 1 user-defined function thay vì constant expression, Oracle database k có cách nào biết được liệu function đó có null hay không nên sẽ full scan table để k bỏ sót bản ghi nào. Ta có thể tự ý thêm IS NOT NULL cho function đó thì Oracle tối ưu sẽ tự hiểu là các data cần tìm chỉ nằm trong index nên sẽ dùng index. VD: 
 SELECT * FROM employees WHERE date_of_birth IS NULL AND blackbox(employee_id) IS NOT NULL
 Với blackbox là user-defined function chả cần biết có NULL hay không nhưng Oracle sẽ dùng index của date_of_birth để search vì ta có IS NOT NULL. Hàm blackbox luôn trả TRUE nên k ảnh hưởng tới query.
+
+
+
