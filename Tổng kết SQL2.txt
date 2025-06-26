@@ -54,6 +54,17 @@ Phong(MaPh, DiaChi)
 => Nếu lấy mã phòng của mọi phòng r lại nested check mọi nhân viên phòng đó sống ở HN là NULL thì bị dài. Ta lấy mã phòng mà NOT IN tập mã phòng mà có sinh viên sống ở HN là đc
 SELECT MaPh FROM Phong WHERE MaPh NOT IN (SELECT MaPh FROM NhanVien WHERE DiaChi = 'Ha Noi')
 
+-> Usecase: bảng có 10M phần tử, cần phân trang lấy page thứ 1000 nhanh. 
+VD dùng offset: SELECT * FROM big_table ORDER BY id LIMIT 10 OFFSET 10000; => buộc phải duyệt tuần tự và bỏ qua 10000 phần tử đầu tiên nên page càng lớn càng lâu.
+Giải pháp khác là đánh index cho trường orderby tăng dần có quy luật. VD: SELECT * FROM big_table WHERE id > 10000 ORDER BY id LIMIT 10; => query có index rất nhanh nhưng khi data bị thêm xoá, bảng gốc phải check udpate lại trường đó cho mọi request rất lâu.
+
+Giải pháp là dùng MATERIALZED VIEW lưu (id, pagenumber) đánh index. URL: https://github.com/dongitran/Smart-Pagination/blob/main/getSmartPage.js
+Cơ chế ItemPerPage của MATERIALIZED VIEW fix cứng, phải xử lý input để biết lấy từ page nào đến page nào, ra list id thì join vào bảng gốc.
+Cách này tốt hơn cách cursor-based navigation vì cô lập việc đánh index sang bảng riêng chứ k dùng trường ở bảng gốc. Để khi data update, sẽ k lock update hàng loạt vào bảng gốc. Nhưng sẽ tốn thêm bộ nhớ cho materialized view. 
+Check bảng gốc có data mới mà MV chưa tự update xong thì query trên bảng gốc. Cơ chế check data mới vào sẽ luôn có id lớn nhất tăng dần. Thì chỉ cần check phần tử cuối của MV và bảng gốc = nhau là được. Xoá data thì chịu, kqtr.
+Yêu cầu k có filter vì có filter sẽ buộc chạy filter trước rồi order tuần tự theo 1 trường k thể tối ưu
+Yêu cầu data k thay đổi nhiều, nếu data đổi liên tục, MV update liên tục sẽ chết CPU.
+
 
 
 # Dùng transaction
