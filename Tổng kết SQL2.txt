@@ -65,6 +65,11 @@ Check bảng gốc có data mới mà MV chưa tự update xong thì query trên
 Yêu cầu k có filter vì có filter sẽ buộc chạy filter trước rồi order tuần tự theo 1 trường k thể tối ưu
 Yêu cầu data k thay đổi nhiều, nếu data đổi liên tục, MV update liên tục sẽ chết CPU.
 
+-> Chốt giải pháp nhiều luồng cùng insert if not exist:
+C1: Toàn dự án phải insert if not exist với retry. Chỗ nào không dùng mà insert bulk thì duplicate 1 cái sẽ fail tất cả.
+C2: Mọi chỗ insert đều phải dùng WITH (UPDLOCK, SERIALIZABLE). UPDLOCK cản select for update, còn SERIALIZE cản update các bản ghi đó. Nếu có 1 chỗ select mà insert thuần sẽ bị sai ngay. Mix 2 cách cũng được.
+=> C1 tốt hơn và phải đánh constraints unique là chuẩn bài. C2 khá sida nhưng thật ra cũng đúng, nó sẽ lock mọi nơi khác add or update phần tử thoả mãn điều kiện lấy trong WHERE chứ k chỉ lock các phần tử đang có.
+
 
 
 # Dùng transaction

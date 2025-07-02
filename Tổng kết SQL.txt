@@ -236,7 +236,8 @@ Số lượng bitmap index bằng số lượng giá trị unique. VD có thể 
 -> Đánh index trường text và search trường đó thì chỉ có tác dụng với 'pattern%', còn '%pattern%' sẽ k dùng index. Để tốc độ cao phải CREATE FULLTEXT CATALOG để tạo full text search index riêng trong SQL Server.
 
 --> Bài toán search 2 trường chứa <search_text> ở bất cứ vị trí nào
-- Full text index có cơ chế tokenize, chỉ được khi search_text là 1 token chứ chứa tùy ý 1 phần của từ khác sẽ k thể search. Full text index phải dùng CONTAIN không dùng được LIKE
+- Full text index có cơ chế tokenize, chỉ được khi search_text là 1 token chứ chứa tùy ý 1 phần của từ khác sẽ k thể search, k hoàn toàn fuzzy. Full text index phải dùng CONTAIN không dùng được LIKE trong SQL Server.
+K cần phải gom các cột lại thành 1 cột mới, mà chỉ cần đánh 1 index trên nhiều cột được luôn. Bộ nhớ tăng k đáng kể và tốc độ k đổi.
 - Nếu biết trước các từ có thể search thì dùng computed column với CHARINDEX kiểu thêm 1 column lưu lại tần suất xuất hiện của 1 từ:
 ALTER TABLE MyTable
 ADD HasABC AS CASE WHEN CHARINDEX('abc', MyColumn) > 0 THEN 1 ELSE 0 END PERSISTED;
