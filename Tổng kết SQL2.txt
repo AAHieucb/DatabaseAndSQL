@@ -260,6 +260,10 @@ try {
   logger("Failed to insert db::{ex.message}");
 }
 
+--> Nhanh: 
+- Dùng SERIALIZE transaction và add if not exist để lock toàn bộ data được chọn mà block update hay select for update. Mọi chỗ khác add trùng sẽ luôn tuần tự
+- Dùng add và retry logic cũng đảm bảo add if not exist nhưng k block các lệnh ở process khác mà process hiện tại nếu trùng thì thử lại thôi => nên có dùng cách này
+
 
 
 # Replica
