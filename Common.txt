@@ -1,9 +1,3 @@
-# N + 1 queries problems
-VD query cả post và comment từng post, thì ta query list id rồi query mỗi id là 1 lệnh SQL lấy detail => luôn giải quyết được bằng cách dùng đúng IN và JOIN.
-Thường chỉ gặp khi dùng ORM lazy loading bị sai, nó delay lại đến khi dùng post.comment mới query comment.
-
-
-
 # Design quan hệ các bảng trong SQL
 Với 1-1: C1 là bảng 1 có 1 id của bảng 2 hoặc ngược lại, C2 là 1 bảng mới chứa cả 2 id của bảng 1 và 2.
 Với 1-n: C1 thì bắt buộc bảng n phải chứa identity của bảng 1, C2 là 1 bảng mới chứa PK của cả 2
@@ -65,4 +59,14 @@ UNF: khi có cột là multivalue attributes.
 1NF: trong 1 bảng k được có record multivalue, có thể value trùng
 2NF: mọi attributes trong bảng đều fully dependency vào primary key. VD primary key là 2 trường thì mọi key khác đều phụ thuộc vào cả 2 trường mới ra 1 giá trị chứ kp 1 trường
 3NF: tất cả atts đều fully và directly phụ thuộc vào primary key. Chứ kp là transitively dependent VD B phụ thuộc A, C phụ thuộc B thì C phụ thuộc A với A là primary key
+
+-> Nhanh: 
+Normalize: viết FD ra, lược bỏ theo armstrong, xoá dần các cái phụ thuộc từ bên phải lấy tối thiểu bên trái, quan hệ nào cần query phụ thuộc thì giữ lại -> minimal key
+
+
+
+# N + 1 queries problems
+VD query cả post và comment từng post, thì ta query list id rồi query mỗi id là 1 lệnh SQL lấy detail => luôn giải quyết được bằng cách dùng đúng IN và JOIN.
+Thường chỉ gặp khi dùng ORM lazy loading bị sai, nó delay lại đến khi dùng post.comment mới query comment.
+
 

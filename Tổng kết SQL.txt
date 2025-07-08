@@ -38,6 +38,7 @@ Super key: là set attributes unique trong relation
 Candidate key(Minimal key): là super key nhưng k bị redundant là k thể reduce các trường đi mà vẫn giữ nguyên thuộc tính unique được nx. 
 Primary key: là 1 candidate key nếu ta k xác định thì DBMS tự xác định cho ta. 
 Alternate key: là candidate key nhưng k được chọn là primary key
+Unique key
 
 
 
@@ -69,6 +70,7 @@ Ta có thể rightclick database -> tasks -> Backup
 
 # Các constraints
 DEFAULT, NOT NULL, IDENTITY, Constraint CHECK có thể theo hẳn 1 câu lệnh SQL mới, UNIQUE INDEX cũng chỉ là INDEX nhưng thêm constraints UNIQUE cho data.
+unique index khác primary index ở chỗ table có thể có nhiều unique index và allow null
 
 -> Muốn thêm data foreign key phải có primary key từ trước
 FOREIGN KEY (id1) REFERENCES table2(id2) on UPDATE action ON DELETE action; với các action là NO ACTION, CASCADE, SET NULL và SET DEFAULT.

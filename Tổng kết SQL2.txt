@@ -270,6 +270,22 @@ try {
 - Dùng add và retry logic cũng đảm bảo add if not exist nhưng k block các lệnh ở process khác mà process hiện tại nếu trùng thì thử lại thôi => nên có dùng cách này
 
 
+Chốt: Câu trả lời cho insert if not exist: nó cản lệnh update hoặc select with lock tương tự, chứ k cản lệnh select bth.
+Nó lock cả những câu lệnh mà lấy ra phần tử thỏa mãn điều kiện WHERE kể cả khi điều kiện WHERE của câu lệnh select mới k trùng với WHERE của câu lệnh lock cũ.
+K có key mà muốn đảm bảo k add duplicate, thì chỉ cần dùng lệnh insert if not exist với tx như này để add ở mọi chỗ, thậm chí update multiple. Nếu chỗ này dùng insert if not exist, chỗ khác dùng insert bình thường thì 2 lệnh sẽ tuần tự nhau thôi, nhưng k nên vì nếu k có key thì có thể bị add trùng, do đó phải đảm bảo mọi chỗ đều dùng lệnh insert if not exist như này là được.
+Nếu 2 luồng insert if not exist đều là add single thì chỉ 1 luồng thành công, luồng còn lại k báo lỗi failed vì điều kiện if k thỏa mãn
+Nếu add nhiều, ta sẽ muốn add còn cái nào bị duplicate thì loại ra thôi:
+C1: Dùng BEGIN TRAN / SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+Cái này chỉ cản update trên nhũng cột kia
+Nếu chỗ khác cũng SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; gọi tương tự sẽ bị deadlock k nên dùng
+Nếu chỗ khác dùng SELECT WITH (UPDLOCK,SERIALIZABLE) thoải mái éo bị cản
+=> C1 ok nhưng vấn đề duy nhất là nhiều chỗ gọi insert if not exist nó sẽ báo lỗi deadlock chứ éo báo lỗi duplicate key và điều đó rất nguy hiểm nếu deadlock liên tục.
+C2: SELECT Id FROM [847013a5-5ef8-401d-bbce-81b9c253bef2SMP].[PowerPlatformConnection] WITH (UPDLOCK,SERIALIZABLE) WHERE Id IN ('0968ffd0-a37c-44d0-958c-1f717ddebc01')
+Sửa thành Id IN, rồi lưu lại vào 1 bảng nếu bảng đó có data thì ta retry logic thôi. Tương tự thì insert values như 1 list bth.
+=> Vậy là insert if not exist hoàn toàn làm đươc bằng code thuần mà k cần có key. C2 là chuẩn nhất.
+
+
+
 
 # Replica
 Dùng master copy và các slave là secondary copy theo quan hệ 1-m hay n-m. Dùng khi đọc nhiều ghi ít, đọc từ slave, ghi vào master sẽ tự update vào slave. VD backup database hay đánh index, tạo materialized view cũng là 1 cách dùng replica.

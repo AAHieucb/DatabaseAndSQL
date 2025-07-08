@@ -1,26 +1,6 @@
-# SQL Server
-SQL Server là chuẩn RDBMS có đầy đủ tính năng của microsoft. Có nhiều dịch vụ đi kèm cho phép phân tích dữ liệu bằng SSAS(SQL Server Analysis Services) hay tạo được báo cáo bằng SSRS(SQL Server Reporting Services) hay thực hiện quá trình ETL(Extract-Transform-Load) bằng SSIS(SQL Server Integration Services), SQL Full Text Search.
-Có thể cài trên máy đơn or trên hệ thống Cluster.
-
--> SQLite: Bản đơn giản của SQL server nhưng vẫn hỗ trợ đầy đủ tính năng nâng cao, ACID. K cần user password, k cần database server mà lưu luôn vào chỉ 1 file. 
-=> Thg dùng trong các hệ thống vừa và nhỏ, 1 db dữ liệu nhỏ, không yêu cầu đồng bộ cao, k chia cluster
-
--> T-SQL (Transact-SQL) là ngôn ngữ mở rộng của SQL cung thêm tính năng, chỉ hơi khác cú pháp 1 chút.
-
-
-
-# So sánh PostgreSQL, MySQL, SQL Server, Oracle Database
-PostgreSQL tuân thủ nghiêm ngặt chuẩn SQL, PostgreSQL có nhiều tính năng cao cấp như kiểm soát đồng thời cao, hỗ trợ các kiểu dữ liệu phức tạp hơn nên dùng cho các ứng dụng có tải công việc lớn. 
-MySQL linh hoạt hơn và có thể không đúng chuẩn, k hỗ trợ các tính năng nâng cao, do mã nguồn mở nên cộng động lớn và dễ dùng hơn.
-SQL Server của Microsoft cũng mạnh như Postgre và phù hợp với các công cụ quản lý của Microsoft nhưng chi phí cao.
-Oracle Database của Oracle Corporation cũng rất mạnh, thương mại.
-=> Tất cả đều chia cluster phân tán được
-
-
-
 # Hệ thống db OLTP và OLAP 
 OLTP (On-line transactional processing) được dùng trong hầu hết các nghiệp vụ realtime ở dạng transaction. VD rút tiền từ tk ngân hàng
-OLAP (on-line analytical processing) là phân tích trực tuyến, làm vc với lượng rất lớn data nên độ chính xác và toàn vẹn giao dịch k đươc như OLTP.
+OLAP (On-line analytical processing) là phân tích trực tuyến, làm vc với lượng rất lớn data nên độ chính xác và toàn vẹn giao dịch k đươc như OLTP.
 => Phân biệt: OLTP phải ổn định và nhanh để phục vụ query data ngay lập tức, còn OLAP đủ lớn và mạnh về tính toán để phân tích dữ liệu kinh doanh lâu dài.
 
 SQL thường dùng cho các hệ thống OLAP, query phức tạp với data lớn. Thường mở rộng chiều dọc, tăng CPU, RAM, HDD cho các node đã có, làm node đó mạnh lên nhiều lần. 
@@ -28,14 +8,30 @@ NoSQL dùng cho OLTP, k phù hợp với query phức tạp. Thường mở rộ
 
 
 
+# So sánh PostgreSQL, MySQL, SQL Server, Oracle Database
+PostgreSQL tuân thủ nghiêm ngặt chuẩn SQL, PostgreSQL có nhiều tính năng cao cấp như kiểm soát đồng thời cao, hỗ trợ các kiểu dữ liệu phức tạp hơn.
+MySQL linh hoạt hơn và có thể không đúng chuẩn, k hỗ trợ các tính năng nâng cao, do mã nguồn mở nên cộng động lớn và dễ dùng hơn.
+SQL Server của Microsoft cũng mạnh như Postgre và phù hợp với các công cụ quản lý của Microsoft nhưng chi phí cao, không mạnh bằng PostSQL đâu, k có add if not exist.
+Oracle Database của Oracle Corporation cũng rất mạnh, thương mại.
+=> Tất cả đều chia cluster phân tán được 
+
+-> SQL Server: Microsoft có nhiều dịch vụ đi kèm cho phép phân tích dữ liệu bằng SSAS(SQL Server Analysis Services) hay tạo được báo cáo bằng SSRS(SQL Server Reporting Services) hay thực hiện quá trình ETL(Extract-Transform-Load) bằng SSIS(SQL Server Integration Services), SQL Full Text Search.
+ETL là quá trình tổng hợp data từ nhiều nguồn or chuyển dữ liệu từ hệ thống cũ sang kiểu db mới => chưa bao giờ được dùng
+Thực tế SQL Server dùng T-SQL (Transact-SQL) là ngôn ngữ mở rộng của SQL cung thêm tính năng, chỉ hơi khác cú pháp 1 chút.
+
+-> SQLite: Bản đơn giản của SQL server nhưng vẫn hỗ trợ đầy đủ tính năng nâng cao, ACID. K cần user password, k cần database server mà lưu luôn vào chỉ 1 file. Thg dùng trong các hệ thống vừa và nhỏ, ***không yêu cầu đồng bộ cao, k chia cluster
+
+
+
 # ACID
-Mỗi lệnh SQL là 1 tx độc lập 
+Tx: 1 tx hoặc là thành công, hoặc là revert all, kbh thành công 1 phần. Mỗi lệnh SQL luôn là 1 tx độc lập.
 Consistency: mọi tx sẽ đưa db từ một trạng thái hợp lệ này sang một trạng thái hợp lệ khác, kbh để lại 1 trạng thái không nhất quán
 Isolation: các tx được thực hiện độc lập với nhau, có nhiều cấp độ cô lập đảm bảo các tx chạy đồng thời k ảnh hưởng lẫn nhau.
 Durability: một tx đã được commit thì thay đổi phải được đồng bộ xuống db kể cả khi sự cố mất điện. Các tx thành công mà chưa dược đồng bộ xuống database phải được đồng bộ khi hệ thống hoạt động trở lại.
 
 
 
+//!!!!!!!
 # Cơ chế database lưu trong storage
 Data được lưu trên đĩa cứng or mainmem như bth. Vc truyền data giữa đĩa cứng và main mem thông qua units of disk blocks.
 Disk defragmentation trong máy tính nếu right click properties sẽ thấy ổ đĩa chia theo kiểu so le: xanh trắng xanh xanh xanh trắng xanh xanh xanh
