@@ -19,7 +19,8 @@ Oracle Database của Oracle Corporation cũng rất mạnh, thương mại.
 ETL là quá trình tổng hợp data từ nhiều nguồn or chuyển dữ liệu từ hệ thống cũ sang kiểu db mới => chưa bao giờ được dùng
 Thực tế SQL Server dùng T-SQL (Transact-SQL) là ngôn ngữ mở rộng của SQL cung thêm tính năng, chỉ hơi khác cú pháp 1 chút.
 
--> SQLite: Bản đơn giản của SQL server nhưng vẫn hỗ trợ đầy đủ tính năng nâng cao, ACID. K cần user password, k cần database server mà lưu luôn vào chỉ 1 file. Thg dùng trong các hệ thống vừa và nhỏ, ***không yêu cầu đồng bộ cao, k chia cluster
+-> SQLite: Bản đơn giản của SQL server nhưng vẫn hỗ trợ đầy đủ tính năng nâng cao, ACID. K cần user password, k cần database server mà lưu luôn vào chỉ 1 file. Thg dùng trong các hệ thống vừa và nhỏ, ***không yêu cầu đồng bộ cao, k chia cluster.
+SQLite sử dụng làm cache ok nhưng chậm hơn redis vì redis luôn lấy từ main mem là RAM trực tiếp
 
 
 
@@ -31,9 +32,8 @@ Durability: một tx đã được commit thì thay đổi phải được đồ
 
 
 
-//!!!!!!!
 # Cơ chế database lưu trong storage
-Data được lưu trên đĩa cứng or mainmem như bth. Vc truyền data giữa đĩa cứng và main mem thông qua units of disk blocks.
+Data được lưu trên đĩa cứng or mainmem như bth. Data truyền giữa đĩa cứng và main mem theo từng unit of disk blocks.
 Disk defragmentation trong máy tính nếu right click properties sẽ thấy ổ đĩa chia theo kiểu so le: xanh trắng xanh xanh xanh trắng xanh xanh xanh
 => VD các vùng màu xanh là ứng dụng chạy. Đáng lẽ nó phải kín xanh hết nhưng vẫn dôi ra các vùng màu trắng là do ứng dụng dùng xong thì bộ nhớ giảm đi làm dôi ra các phần thừa. Về sau các ứng dụng dùng thêm vùng nhớ thì append dùng tiếp vào các phần đằng sau vì các vùng trắng k đủ thành ra 1 ứng dụng nhưng lại lưu ở nhiều vùng nhớ rời rạc làm nó truy cập bị chậm. Các phần mêm disk optimization chính là cơ chế rearrange lại các vùng nhớ làm cho ứng dụng sau khi cài và sử dụng sẽ lưu về các vùng liên tiếp nhau trên disk.
 
@@ -70,6 +70,7 @@ VD7: select E.fname, E.lname, E.address from employee as E NATURAL JOIN works_on
 
 
 
+//!!!!!!!!!!
 # Other
 -> Có 2 loại là máy chủ vật lý (có HDD, CPU, RAM) và máy chủ ảo VPS (virtual private server). 
 Máy chủ ảo có thể là cloud hoặc dùng 1 máy chủ vật lý host lên và cài phần mềm để chia ra nhiều máy chủ ảo cung cho ngừoi dùng.
