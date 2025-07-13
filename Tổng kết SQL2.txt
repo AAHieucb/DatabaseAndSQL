@@ -284,6 +284,8 @@ C2: SELECT Id FROM [847013a5-5ef8-401d-bbce-81b9c253bef2SMP].[PowerPlatformConne
 Sửa thành Id IN, rồi lưu lại vào 1 bảng nếu bảng đó có data thì ta retry logic thôi. Tương tự thì insert values như 1 list bth.
 => Vậy là insert if not exist hoàn toàn làm đươc bằng code thuần mà k cần có key. C2 là chuẩn nhất.
 
+Serializable isolation chỉ đảm bảo tuần tự cho chính transaction đó.
+✅ Nó không ép buộc những transaction khác phải tự động chạy tuần tự => do đó dùng k đảm bảo. VD éo có key xong chỗ add thường, chỗ add với serialize thì k check đâu bé
 
 
 
