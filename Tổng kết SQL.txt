@@ -1,59 +1,79 @@
-# Basic
-sp_helptext xem chức năng của lệnh
+# Basic 
+RDBMS chỉ hệ thống quản trị Relational DB. SSMS hay Azure Data Studio là một RDBMS.
+SSMS quản lý qua UI phải connect vào db server lưu data là SQL Server. Có SQLCMD để dùng câu lệnh SQL trên terminal.
 
--> SS với null ra UNKNOWN = 1/2 nằm giữa TRUE và FALSE. VD UNKNOWN AND TRUE là UNKNOWN
 
--> Các kiểu JOIN: FULL OUTER JOIN, LEFT JOIN, RIGHT JOIN, INNER JOIN (mặc định JOIN), CROSS JOIN (Self Join) tích đề các, NATURAL JOIN tự động trường trùng tên
-2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
-A Union B sẽ ra hợp của A và B với các trường định sẵn và nếu bị trùng nhiều cái trong 1 or cả 2 table sẽ bị rút gọn chỉ còn 1. VD: 1345 UNION với 24456 sẽ thành 123456
 
---> Nhiều kiểu join khác không hỗ trợ sẵn
+# Phân quyền user login
+->*** Trước khi dùng dự án, phải có 1 account vào xem db (SSMS): 
+- Dùng Window Authentication là login vào acc SA. SA k cần cấp quyền user cho database nào hết vì nó mặc định vào được tất cả
+- Tạo account mới và cấp quyền user cho account đó vào 1 db bất kỳ để login vào
+Security -> New Login -> Set default database và grant quyền access database engine -> RightClick database -> Security -> check SQL Server and Window Authentication mode -> Login SA vào 1 database -> New User -> chọn User là tk login vừa tạo -> cấp quyền gì cho nó với database này -> đăng nhập
+Có thể add nhiều user truy cập vào database, nhưng 1 db chỉ có 1 db_owner duy nhất. 
+=> Thường tạo user riêng cho server dùng, còn tk sa hoặc window authentication chỉ cho admin dùng để quản lý mọi thứ.
+- Xoá 1 account phải xoá trong từng db. Nếu tk đó owned 1 schema của database thì thì phải đổi quyền đó sang cho người khác trước để nó k owned gì cả mới xoá được.
+
+-> Phân quyền cho user dùng schema hay bảng cụ thể: 
+Cả server có thể chung 1 login. 1 login có thể ánh xạ đến nhiều tên user khác nhau cho mỗi db.
+Các ROLE: SELECT, INSERT, DELETE, UPDATE, REFERENCES (quyền refer to bảng đó khi dùng trong constraints), USAGE (quyền dùng element đó trong declaration của họ), TRIGGER(quyền được tạo trigger trên relation đó), EXECUTE(quyền thực hiện 1 phần code như function, procedure), UNDER (quyền tạo subtype của type cho trước).
+
+GRANT SELECT ON Sales.Orders TO bob; 
+SELECT * FROM sys.database_permissions WHERE major_id = OBJECT_ID('Sales.Orders'); => xem permission
+DENY SELECT ON Sales.Orders TO bob; => chặn hẳn SELECT bất kể user có role
+REVOKE SELECT ON Sales.Orders FROM bob; => thu hồi quyền đã gán, thu hồi cả deny
+
+-> Nhanh:
+Dùng SA tạo ra 1 login, từ login tạo ra 1 user mới cho 1 db. Phân quyền user đó cho schema hay bảng ok
+
+
+
+# JOIN bảng
+FULL OUTER JOIN, LEFT JOIN, RIGHT JOIN, INNER JOIN (mặc định JOIN), CROSS JOIN (Self Join) tích đề các, NATURAL JOIN tự động trường trùng tên
+Các kiểu join k có sẵn:
 - Semi join: chọn phần tử bảng A khớp với 1 or nhiều hàng bảng B nhưng k gồm các cột bảng B
 SELECT A.* FROM A WHERE EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id )
 - Anti join: ngược lại chọn các hàng bảng A mà k có hàng tương ứng trong bảng B
 SELECT A.* FROM A WHERE NOT EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id );
+- 2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
 
--> Schema là 1 namespace để gom các table chung 1 đặc điểm để dễ quản lý, mặc định là dbo. 
-Dự án lớn thường chia phạm vi lớn, VD chia 1 schema 1 tenant khi dùng multi-tenant và phân quyền user được dùng schema nào.
 
--> Kiểu DEC(p,[s]) thì s số sau dấu chấm và số các chữ số tổng cả trước và sau dấu chấm là p. VD: duration DEC(5,2). 
-Kiểu BIT chỉ nhận 2 giá trị 0 và 1 nên dùng cho boolean
-VD: DECLARE @v1 Char(10) = 'Hello1'; -- k chứa Unicode, cấp phát tĩnh
+
+# Data type
+Dùng BIT cho boolean
+Dùng uniqueidentifier cho GUID
+
+DOUBLE dùng để lưu double, lưu sẽ tự làm tròn max khoảng 15 số sau dấu chấm.
+DEC(p,[s]) dùng để lưu double với lượng chính xác số sau dấu chấm. Với s là số sau dấu phẩy, p là tổng các chữ số trước và sau dấy chấm. 
+
+DECLARE @v1 Char(10) = 'Hello1'; -- k chứa Unicode, cấp phát tĩnh
 DECLARE @v2 Nchar(10) = 'Hello2'; -- chứa Unicode, cấp phát tĩnh
 DECLARE @v3 Varchar(10) = 'Hello3'; -- k chứa Unicode, cấp phát động max đến n ô nhớ
 DECLARE @v4 Nvarchar(20) = N'Nguyễn Thụ Hiếu'; -- chứa Unicode, cấp phát động max n ô nhớ. Để nhập Unicode dùng cú pháp N'<chữ>'
-Kiểu Text: k chứa Unicode, cấp phát động theo độ dài chuỗi nhập vào chứ kp bằng số như trên
-Kiểu Ntext: chứa unicode, cấp phát động theo độ dài chuỗi nhập vào
-uniqueidentifier
+Kiểu Text: k chứa Unicode, cấp phát động theo độ dài chuỗi nhập vào chứ kp bằng số như trên => thay thế bằng VARCHAR(MAX) lưu hàng tỉ tỉ ký tự được
+Kiểu Ntext: chứa unicode, cấp phát động theo độ dài chuỗi nhập vào => thay thế bằng NVARCHAR(MAX)
 
-Có thể tạo custom type với CREATE TYPE, vào db -> Programmability -> Types -> User-Defined Data Types sẽ hiện các type ta định nghĩa
+SS với null ra UNKNOWN = 1/2 nằm giữa TRUE và FALSE. VD UNKNOWN AND TRUE = UNKNOWN
 
--> Tên cột có space có thể nhét trong '' -> VD: SELECT @count AS 'Count number'; 
-LIKE: "_r%" chứa r ở vị trí thứ 2. h[oa]t tìm hot, hat; h[^oa]t tìm hit và né hot hat ra tức ^ là phủ định trong []; c[a-c]t tìm tất cả cat, cbt, cct tức - là trong 1 khoảng 
+-> Có thể tạo custom type với CREATE TYPE 
+SQL Server thì vào db -> Programmability -> Types -> User-Defined Data Types sẽ hiện các type ta định nghĩa
 
 -> Cách clone type bảng 1 vào bảng 2 nhưng khởi tạo rỗng: SELECT * INTO CloneTable FROM sales.staffs WHERE 6>9
 
--> Các loại key
-Super key: là set attributes unique trong relation
-Candidate key(Minimal key): là super key nhưng k bị redundant là k thể reduce các trường đi mà vẫn giữ nguyên thuộc tính unique được nx. 
-Primary key: là 1 candidate key nếu ta k xác định thì DBMS tự xác định cho ta. 
-Alternate key: là candidate key nhưng k được chọn là primary key
-Unique key
+-> Nhanh:
+uniqueidentifier và bit, nvarchar(max) lưu vô hạn với unicode
+Có thể tạo type riêng với CREATE type
+SELECT INTO rất mạnh trong việc tạo 1 bảng mới y hệt type bảng cũ và chứa các data chỉ định. Từ bảng tạm đó có thể thao tác thoải mái trước khi xoá đi.
 
 
 
+//!!!!!!!!!
+# Các constraints
+DEFAULT, NOT NULL, IDENTITY, Constraint CHECK có thể theo hẳn 1 câu lệnh SQL mới, UNIQUE INDEX cũng chỉ là INDEX nhưng thêm constraints UNIQUE cho data.
+unique index khác primary index ở chỗ table có thể có nhiều unique index và allow null
 
-# SSMS 
-SSMS quản lý db qua giao diện, phải kết nối vào db server lưu data là SQL Server. Mở ct SQLCMD để dùng câu lệnh SQL trên terminal được. 
-Tương tự có Azure Data Studio.
-
--> Setup user => ref tới "NodeJS / Kt ngoài / Config SSMS kết nối được với mssql nodejs trên máy win (hoạt động tốt năm 2022)"
-Tạo tk: Security -> New Login -> Tạo account, set default database, Status set login là enabled và grant quyền access database engine -> rightclick database -> Security -> check SQL Server and Window Authentication mode -> vào database nào đó -> New User -> đặt và chọn User là tk login vừa tạo -> cấp quyền gì cho nó với database này -> đăng nhập ok, vì 1 tk phải có ít nhất 1 database nào đó truy cập được thì mới đăng nhập được
-Để dùng sa: rightclick sa -> đổi mật khẩu tùy ý -> set up quyền -> đăng nhập được -> tk sa k cần cấp quyền user cho database nào hết vì nó mặc định vào được tất cả
-Có thể tùy chỉnh quyền hạn của tk, add thêm nhiều user truy cập vào database, nhưng 1 db chỉ có 1 db_owner duy nhất. 
-=> Thường sẽ tạo user riêng cho server dùng, còn tk sa hoặc window authentication chỉ cho admin dùng để quản lý mọi thứ.
-
-Để xoá 1 tk, ta phải xoá nó trong từng db và trong mục security chung của database. Nếu tk đó owned 1 schema của database thì thì phải đổi quyền đó sang cho ngừoi khác để nó k owned gì cả mới xoá được.
+-> Muốn thêm data foreign key phải có primary key từ trước
+FOREIGN KEY (id1) REFERENCES table2(id2) on UPDATE action ON DELETE action; với các action là NO ACTION, CASCADE, SET NULL và SET DEFAULT.
+Mặc định là NO ACTION khi xoá sẽ trả lỗi và dữ liệu bảng cha được khôi phục; CASCADE thì dữ liệu bản con được cập nhập tương ứng với bảng cha; SET NULL thì cập nhập bảng con thành NULL, column foreign key của con phải cho phép NULL; SET DEFAULT thì SQL Server sẽ về giá trị mặc định, phải có constraints default khi khởi tạo mới dùng được.
 
 
 
@@ -68,30 +88,12 @@ Ta có thể rightclick database -> tasks -> Backup
 
 
 
-# Các constraints
-DEFAULT, NOT NULL, IDENTITY, Constraint CHECK có thể theo hẳn 1 câu lệnh SQL mới, UNIQUE INDEX cũng chỉ là INDEX nhưng thêm constraints UNIQUE cho data.
-unique index khác primary index ở chỗ table có thể có nhiều unique index và allow null
-
--> Muốn thêm data foreign key phải có primary key từ trước
-FOREIGN KEY (id1) REFERENCES table2(id2) on UPDATE action ON DELETE action; với các action là NO ACTION, CASCADE, SET NULL và SET DEFAULT.
-Mặc định là NO ACTION khi xoá sẽ trả lỗi và dữ liệu bảng cha được khôi phục; CASCADE thì dữ liệu bản con được cập nhập tương ứng với bảng cha; SET NULL thì cập nhập bảng con thành NULL, column foreign key của con phải cho phép NULL; SET DEFAULT thì SQL Server sẽ về giá trị mặc định, phải có constraints default khi khởi tạo mới dùng được.
-
-
-
 # Xoá bảng
 Ta nên hạn chế việc xóa data, mà chỉ nên đánh dấu là data k còn được dùng nữa thôi. 
 -> DELETE: xóa mọi record or xóa vài record thỏa mãn điều kiện. Khi xóa cả bảng bị chậm hơn TRUNCATE khi SQL Server phải duyệt qua từng record. Có thể khôi phục lại bằng ROLLBACK command nếu xóa bằng transaction và chưa commit. IDENTITY sẽ tiếp tục tăng. DELETE sẽ lock row khi xóa từng dòng.
 -> TRUNCATE: sẽ xóa file lịch sử transaction của bảng và giải phóng bộ nhớ của bảng luôn nên tốc độ nhanh hơn. Reset identity bảng về 0, dùng table lock, k thể ROLLBACK khôi phục
 -> DROP: khi các cái trước chỉ xóa row thì cái này xóa cả bảng, muốn dùng bảng buộc phải CREATE TABLE lại. K thể khôi phục bằng ROLLBACK vì nó cũng auto commit, xóa cả named element của schema. Nó xóa cả cấu trúc bảng nên mạnh hơn TRUNCATE còn TRUNCATE dùng tiếp được cấu trúc bảng.
 
-
-
-# Phân quyền user login
-Có thể phân quyền cho user dùng schema hay bảng cụ thể. 
-Khi dựng server connect db, ta thường tạo 1 user riêng cho server connect trong phạm vi table cho phép. Còn tk admin thì chỉ có db admin giữ, tránh server bị hack là sập tất cả
-
--> Các ROLE: SELECT, INSERT, DELETE, UPDATE, REFERENCES (quyền refer to bảng đó khi dùng trong constraints), USAGE(quyền dùng element đó trong declaration của họ), TRIGGER(quyền được tạo trigger trên relation đó), EXECUTE(quyền thực hiện 1 phần code như function, procedure), UNDER(quyền tạo subtype của type cho trước).
-1 user - 1 login, nhưng 1 login có thể ánh xạ đến nhiều tên user khác nhau cho mỗi db. User phải là khác nhau trong tưng db nhưng cả server thì chung 1 login tk mk được.
 
 
 
@@ -264,6 +266,10 @@ VD nếu bảng đánh non-clustered index, select where dùng index nhưng cầ
 Nên nếu search displayname và SELECT Id sẽ thấy query plan là non-clustered index scan, SELECT * thì là clustered index scan vì nó lấy luôn từ đó thay vì search trên non-clustered tree rồi search tiếp clustered tree.
 Lưu ý LIKE %% kbh dùng index nhưng hiện như vậy là bảo đang search trên tree nào chứ kp kiểu search, nó vẫn sẽ search full table thôi.
 
+-> Tên cột có space có thể nhét trong '' -> VD: SELECT @count AS 'Count number'; 
+LIKE: "_r%" chứa r ở vị trí thứ 2. h[oa]t tìm hot, hat; h[^oa]t tìm hit và né hot hat ra tức ^ là phủ định trong []; c[a-c]t tìm tất cả cat, cbt, cct tức - là trong 1 khoảng 
+
+
 
 
 # Viết SQL tránh index chậm
@@ -352,6 +358,14 @@ Bản chất là vì khi dùng tham số thì trình biên dịch và trình t�
 => Người ta khuyên là để tối ưu tốc độ, ta luôn dùng tham số khi thấy data trả ra trong các TH không chênh lệch nhiều (hay ko ảnh hưởng tới execution plan). Phần này khá thừa vì ta luôn dùng tham số hóa để tránh SQL Injection
 
 
+-> Các loại key
+Super key: là set attributes unique trong relation
+Candidate key(Minimal key): là super key nhưng k bị redundant là k thể reduce các trường đi mà vẫn giữ nguyên thuộc tính unique được nx. 
+Primary key: là 1 candidate key nếu ta k xác định thì DBMS tự xác định cho ta. 
+Alternate key: là candidate key nhưng k được chọn là primary key
+Unique key
+
+
 
 # Other
 -> Trong database bth thì cái gì đi với NULL cũng là NULL, nhưng Oracle database lại coi empty string là NULL. 
@@ -364,6 +378,9 @@ Cách khác là đánh index kèm 1 constant expression k thể NULL như này: 
 Nếu dùng kèm 1 user-defined function thay vì constant expression, Oracle database k có cách nào biết được liệu function đó có null hay không nên sẽ full scan table để k bỏ sót bản ghi nào. Ta có thể tự ý thêm IS NOT NULL cho function đó thì Oracle tối ưu sẽ tự hiểu là các data cần tìm chỉ nằm trong index nên sẽ dùng index. VD: 
 SELECT * FROM employees WHERE date_of_birth IS NULL AND blackbox(employee_id) IS NOT NULL
 Với blackbox là user-defined function chả cần biết có NULL hay không nhưng Oracle sẽ dùng index của date_of_birth để search vì ta có IS NOT NULL. Hàm blackbox luôn trả TRUE nên k ảnh hưởng tới query.
+
+
+Xem thông tin của trigger, function, view, procedure trong SQL server với: EXEC sp_helptext '<Tên>';
 
 
 
