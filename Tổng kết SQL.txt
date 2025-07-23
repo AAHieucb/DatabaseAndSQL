@@ -27,17 +27,6 @@ Dùng SA tạo ra 1 login, từ login tạo ra 1 user mới cho 1 db. Phân quy�
 
 
 
-# JOIN bảng
-FULL OUTER JOIN, LEFT JOIN, RIGHT JOIN, INNER JOIN (mặc định JOIN), CROSS JOIN (Self Join) tích đề các, NATURAL JOIN tự động trường trùng tên
-Các kiểu join k có sẵn:
-- Semi join: chọn phần tử bảng A khớp với 1 or nhiều hàng bảng B nhưng k gồm các cột bảng B
-SELECT A.* FROM A WHERE EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id )
-- Anti join: ngược lại chọn các hàng bảng A mà k có hàng tương ứng trong bảng B
-SELECT A.* FROM A WHERE NOT EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id );
-- 2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
-
-
-
 # Data type
 Dùng BIT cho boolean
 Dùng uniqueidentifier cho GUID
@@ -66,17 +55,30 @@ SELECT INTO rất mạnh trong việc tạo 1 bảng mới y hệt type bảng c
 
 
 
-//!!!!!!!!!
 # Các constraints
-DEFAULT, NOT NULL, IDENTITY, Constraint CHECK có thể theo hẳn 1 câu lệnh SQL mới, UNIQUE INDEX cũng chỉ là INDEX nhưng thêm constraints UNIQUE cho data.
-unique index khác primary index ở chỗ table có thể có nhiều unique index và allow null
+DEFAULT, NOT NULL, IDENTITY, constraint CHECK có thể theo hẳn 1 câu lệnh SQL mới.
+UNIQUE INDEX là constraint unique và mặc định thêm non-clusted index cho trường. Nó khác primary index ở chỗ có thể có nhiều unique index và allow null.
 
--> Muốn thêm data foreign key phải có primary key từ trước
-FOREIGN KEY (id1) REFERENCES table2(id2) on UPDATE action ON DELETE action; với các action là NO ACTION, CASCADE, SET NULL và SET DEFAULT.
-Mặc định là NO ACTION khi xoá sẽ trả lỗi và dữ liệu bảng cha được khôi phục; CASCADE thì dữ liệu bản con được cập nhập tương ứng với bảng cha; SET NULL thì cập nhập bảng con thành NULL, column foreign key của con phải cho phép NULL; SET DEFAULT thì SQL Server sẽ về giá trị mặc định, phải có constraints default khi khởi tạo mới dùng được.
+-> Muốn thêm foreign key phải có primary key từ trước: FOREIGN KEY (id1) REFERENCES table2(id2) on UPDATE <action> ON DELETE <action>; 
+- NO ACTION là <action> default sẽ trả lỗi và dữ liệu bảng cha được khôi phục nếu xoá mà vẫn còn ref
+- CASCADE là bảng con cập nhật tương ứng bảng cha
+- SET NULL thì bảng con luôn thành null và foreign key data type của con cũng phải cho phép null
+- SET DEFAULT thì SQL Server sẽ về giá trị mặc định, trường này cũng phải có constraints default khi khởi tạo mới dùng được
 
 
 
+# JOIN bảng
+FULL OUTER JOIN, LEFT JOIN, RIGHT JOIN, INNER JOIN (mặc định JOIN), CROSS JOIN (Self Join) tích đề các, NATURAL JOIN tự động trường trùng tên
+Các kiểu join k có sẵn:
+- Semi join: chọn phần tử bảng A khớp với 1 or nhiều hàng bảng B nhưng k gồm các cột bảng B
+SELECT A.* FROM A WHERE EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id )
+- Anti join: ngược lại chọn các hàng bảng A mà k có hàng tương ứng trong bảng B
+SELECT A.* FROM A WHERE NOT EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id );
+- 2 table muốn UNION với nhau thì phải cùng số lượng cột và vị trí cột phải tương ứng nhau (k cần cùng tên) => thường SELECT gì đó từ 2 cái để cho cùng cột rồi mới union
+
+
+
+//!!!!!!!!!
 # Cơ chế backup database
 Backup database FULL sẽ lưu 1 bản copy full database tại thời điểm đó vào 1 file
 Còn WITH DIFFERENTIAL sẽ backup database khác gì so với lần fullbackup gần nhất. Để backup 1 differential thì phải đã từng backup full r.

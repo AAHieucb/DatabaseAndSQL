@@ -288,6 +288,29 @@ Serializable isolation chỉ đảm bảo tuần tự cho chính transaction đ�
 ✅ Nó không ép buộc những transaction khác phải tự động chạy tuần tự => do đó dùng k đảm bảo. VD éo có key xong chỗ add thường, chỗ add với serialize thì k check đâu bé
 
 
+Usecase quên đánh primary key hoặc unique constraint cho bảng khiến data duplicate: phải xoá duplicate và thêm constraint trong 1 transaction.
+IF NOT EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = 'UQ_PowerPlatformConnection_Id')
+BEGIN TRANSACTION;
+  SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+  WITH CTE AS (
+    SELECT ROW_NUMBER() OVER (PARTITION BY Id ORDER BY (SELECT NULL)) AS rn FROM PowerPlatformConnection WITH (TABLOCK)
+  )
+  DELETE FROM CTE WHERE rn > 1;
+  ALTER TABLE PowerPlatformConnection ADD CONSTRAINT UQ_PowerPlatformConnection_Id UNIQUE (Id);
+COMMIT TRANSACTION;
+Dùng SERIALIZE không thôi thì nó sẽ range lock trên phạm vi select. Escalation lock là hiện tượng server tự động nâng cấp lên thành table lock khi số lượng row bị lock gần như cả bảng. Nó chỉ là xs chứ k đảm bảo luôn nâng thành table lock. 
+SQL chia ra từng mức row lock, page lock, table lock. Chia từng cấp S, U, X lock. 
+VD ta select nhiều row trong bảng, nó sẽ cấp Shared lock trên từng row. Nếu quá 1 lượng đủ lớn (~5000) sẽ escalate thành Table Lock.
+
+Escalation lock trong SQL giúp tránh overload khi có quá nhiều lock nhỏ, và việc lock cả table thay vì cấp lock cho từng row cũng giúp tránh deadlock. Do đó ta nên dùng WITH (TABLOCK) nếu biết trước sẽ lock cả bảng. 
+Tại sao SERIALIZE lock từng row lại có thể deadlock? Trong môi trường đa luồng, nếu các luồng khác insert trực tiếp, mỗi luồng này dùng tx thì k sao. 
+Deadlock thì luồng A lấy X chờ Y, luồng B lấy Y chờ X mới xảy ra.
+Do luồng trên k lock cả bảng mà lock giả sử id:0->100, cần delete 101. Nhưng luồng khác lại select 101 và insert 100 thì deadlock ngay.
+Hoặc luồng A select 1 rồi select 2, luồng B select 2 rồi select 1, cả 2 luồng dùng exclusive lock khiến deadlock.
+1 luông giữ X lock, luồng khác muốn giữ slock sẽ phải chờ x lock nhả ra trước.
+Nếu dùng transaction mà k xđ lock level mặc định thì trong SQL server sẽ tự dùng Exclusive lock.
+
+
 
 # Replica
 Dùng master copy và các slave là secondary copy theo quan hệ 1-m hay n-m. Dùng khi đọc nhiều ghi ít, đọc từ slave, ghi vào master sẽ tự update vào slave. VD backup database hay đánh index, tạo materialized view cũng là 1 cách dùng replica.
