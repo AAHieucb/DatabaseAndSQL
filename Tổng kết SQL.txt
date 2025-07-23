@@ -84,6 +84,14 @@ Backup database FULL sẽ lưu 1 bản copy full database tại thời điểm �
 Còn WITH DIFFERENTIAL sẽ backup database khác gì so với lần fullbackup gần nhất. Để backup 1 differential thì phải đã từng backup full r.
 Ta có thể rightclick database -> tasks -> Backup
 
+Backup db bằng lệnh chứ k dùng UI nhé, tránh Th k có permission:
+BACKUP DATABASE TenDatabase
+TO DISK = 'C:\Backup\TenDatabase.bak'
+WITH FORMAT,
+     INIT,
+     NAME = 'Full Backup of TenDatabase';
+=> Phiên bản k hỗ trợ phải tìm cách khác.
+
 -> Data file trong SQL: - Tập tin lưu trữ dữ liệu chính (*.mdf) chứa dữ liệu khởi đầu
 - Tập tin dữ liệu thứ cấp (*.ndf) chứa dữ liệu phát sinh
 - Tập tin nhật ký thao tác (*.ldf) log thao tác, dùng để khôi phục db khi sự cố
