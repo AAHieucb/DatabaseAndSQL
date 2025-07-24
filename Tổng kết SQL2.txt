@@ -310,6 +310,12 @@ Hoặc luồng A select 1 rồi select 2, luồng B select 2 rồi select 1, c�
 1 luông giữ X lock, luồng khác muốn giữ slock sẽ phải chờ x lock nhả ra trước.
 Nếu dùng transaction mà k xđ lock level mặc định thì trong SQL server sẽ tự dùng Exclusive lock.
 
+Học lại về: shared lock (lock type), range lock (lock scope), exclusive lock. lock read, lock write. các cấp độ serialize db. FOR UPDATE. CTE + SERIALIZE lock range ngay từ select
+Deadlock xảy ra rất dễ như claude nói
+
+làm như trên bị deadlock, cần bỏ
+
+lệnh đơn thì xóa như nào
 
 
 # Replica

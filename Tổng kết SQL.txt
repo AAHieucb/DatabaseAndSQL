@@ -78,35 +78,28 @@ SELECT A.* FROM A WHERE NOT EXISTS ( SELECT 1 FROM B WHERE A.id = B.a_id );
 
 
 
-//!!!!!!!!!
-# Cơ chế backup database
-Backup database FULL sẽ lưu 1 bản copy full database tại thời điểm đó vào 1 file
-Còn WITH DIFFERENTIAL sẽ backup database khác gì so với lần fullbackup gần nhất. Để backup 1 differential thì phải đã từng backup full r.
-Ta có thể rightclick database -> tasks -> Backup
-
-Backup db bằng lệnh chứ k dùng UI nhé, tránh Th k có permission:
-BACKUP DATABASE TenDatabase
-TO DISK = 'C:\Backup\TenDatabase.bak'
-WITH FORMAT,
-     INIT,
-     NAME = 'Full Backup of TenDatabase';
-=> Phiên bản k hỗ trợ phải tìm cách khác.
-
--> Data file trong SQL: - Tập tin lưu trữ dữ liệu chính (*.mdf) chứa dữ liệu khởi đầu
-- Tập tin dữ liệu thứ cấp (*.ndf) chứa dữ liệu phát sinh
-- Tập tin nhật ký thao tác (*.ldf) log thao tác, dùng để khôi phục db khi sự cố
-
-
-
 # Xoá bảng
-Ta nên hạn chế việc xóa data, mà chỉ nên đánh dấu là data k còn được dùng nữa thôi. 
--> DELETE: xóa mọi record or xóa vài record thỏa mãn điều kiện. Khi xóa cả bảng bị chậm hơn TRUNCATE khi SQL Server phải duyệt qua từng record. Có thể khôi phục lại bằng ROLLBACK command nếu xóa bằng transaction và chưa commit. IDENTITY sẽ tiếp tục tăng. DELETE sẽ lock row khi xóa từng dòng.
+Thực tế nên hạn chế việc xóa data mà thêm 1 trường đánh dấu isDeleted thôi.
+-> DELETE: xóa mọi record or vài record thỏa mãn điều kiện. Khi xóa cả bảng bị chậm hơn TRUNCATE khi SQL Server phải duyệt qua từng record. Có thể khôi phục lại bằng ROLLBACK command nếu xóa bằng transaction và chưa commit. IDENTITY vẫn tiếp tục tăng. DELETE sẽ lock row khi xóa từng dòng.
 -> TRUNCATE: sẽ xóa file lịch sử transaction của bảng và giải phóng bộ nhớ của bảng luôn nên tốc độ nhanh hơn. Reset identity bảng về 0, dùng table lock, k thể ROLLBACK khôi phục
--> DROP: khi các cái trước chỉ xóa row thì cái này xóa cả bảng, muốn dùng bảng buộc phải CREATE TABLE lại. K thể khôi phục bằng ROLLBACK vì nó cũng auto commit, xóa cả named element của schema. Nó xóa cả cấu trúc bảng nên mạnh hơn TRUNCATE còn TRUNCATE dùng tiếp được cấu trúc bảng.
+-> DROP: các cái trước chỉ xóa row thì cái này xóa cả cấu trúc bảng, muốn dùng bảng buộc phải CREATE TABLE lại. K thể khôi phục bằng ROLLBACK, xóa cả named element của schema.
 
 
 
+# Backup database
+Data file trong SQL gồm tệp chính (*.mdf) chứa dữ liệu khởi đầu, tệp thứ cấp (*.ndf) chứa dữ liệu phát sinh và nhật ký thao tác (*.ldf) dùng để khôi phục db khi sự cố
 
+Backup FULL sẽ lưu 1 bản copy full db tại thời điểm đó vào 1 file
+Backup WITH DIFFERENTIAL sẽ lưu backup khác gì so với lần full backup gần nhất. Phải đã từng backup full r.
+
+- SSMS: Rightclick database -> tasks
+- Backup bằng SQL tránh TH k có permission:
+BACKUP DATABASE DBName TO DISK = 'C:\Backup\TenDatabase.bak' WITH FORMAT, INIT, NAME = 'Full Backup of DBName';
+=> Nếu phiên bản k hỗ trợ phải tìm cách khác.
+
+
+
+//!!!!!!
 # View
 View lưu câu lệnh SQL, có thể hạn chế người dùng truy cập vào DB mà phải thông qua view cho an toàn. Bản chất SQL cũng thế lệnh SQL vào Select * FROM <view> thôi
 Update data trên view có ảnh hưởng tới bảng gốc nó ref tới => chỉ nên dùng để read
