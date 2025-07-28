@@ -317,6 +317,36 @@ làm như trên bị deadlock, cần bỏ
 
 lệnh đơn thì xóa như nào
 
+-> Bench mark trung bình query 1000 data đầu tiên khi orderby có index trên 1 bảng 1M data không filter, lần đầu tiên từ disk k cache thì mất dưới 1s. Nếu query vị trí page lớn sẽ tăng dần times nhưng cũng k mất quá 5s.
+Nếu không index thì mất 5-30s.
+Thời gian cũng tăng nếu lấy lượng data lớn.
+
+-> Khi bảng lớn, query count sẽ lâu hơn đáng kể so với query data trực tiếp. Do đó nên tách ra 2 query. 
+-> Nếu đánh index cả where và orderby, nó sẽ ưu tiên where hơn vì thực hiện trước r mới orderby. Khi đó nên dùng composite index. Vì nếu 1M data mà query phức tạp, sẽ có 1 phần k dùng index và bị lâu.
+Cũng có thể dùng index orderby nếu tính ra where trả về quá nhiều data thì thà dùng index orderby và với từng row sẽ check where condition
+Cơ chế query plan dùng index nào dựa vào thống kê. Vd nó thống kê số cột có giá trị X là bao nhiêu rồi dùng index nào để lấy ra số lượng ít nhất có thể trước.
+-> Nếu đánh index rời rạc nhiều trường, vẫn có ích khi db combine index. 
+SELECT * FROM users 
+WHERE age = 25 AND city = 'Hanoi';
+
+-- Có thể dùng cả:
+-- index(age) + index(city) 
+-- rồi merge kết quả (intersection)
+Tùy vào chiến lược của query plan 
+=> Nhưng nó thường thì vẫn chậm hơn composite index. 
+
+=> Best practice là luôn đánh composite index với ít nhất 2 trường, or số trường muốn đánh + 1 trường khác. Đánh trường nào phụ thuộc vào query thường dùng là gì. 
+Các query đặc biệt sẽ đánh index riêng có thể dựa vào query plan 
+
+-> Cơ chế cache trong SQL là nó cache query chứ k chỉ cache kết quả. Nên 1 query khác có condition tương đương cũng có thể.
+
+-> Trong SQL, giả sử tôi có bảng rất lớn, vài triệu phần tử. Xong tôi cũng có rất nhiều trường cần filter mà người dùng có thể thêm filter theo các tổ hợp rất phức tạp. Tôi không thể đánh composite index cho tất cả các trường hợp, tất cả các case được, phải làm sao?
+Đánh index cho hàng loạt columns, nếu query db có thể dùng tự động kết hợp index khiến query nhanh hơn, phải thực nghiệm test.
+Thường thì ta sẽ k thể bao hết các case, nên dùn partial index với các case lâu đáng kể hoặc các case hay dùng. Các case hiếm gọi mà query lâu thì chịu thôi, tận dụng cache cho nó v, tối ưu các query bằng bản chất SQL. 
+Vd dùng IN hơn OR.
+VD: dùng Cursor-based Pagination khi query page thứ lớn sẽ mang tốc độ nhanh hơn offset vì có index nhưng k thể orderby? => k dùng vì build query sẽ phức tạp khi muốn filter và orderby theo 1 trường lạ.
+
+
 
 # Replica
 Dùng master copy và các slave là secondary copy theo quan hệ 1-m hay n-m. Dùng khi đọc nhiều ghi ít, đọc từ slave, ghi vào master sẽ tự update vào slave. VD backup database hay đánh index, tạo materialized view cũng là 1 cách dùng replica.
