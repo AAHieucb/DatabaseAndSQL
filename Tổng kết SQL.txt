@@ -86,34 +86,35 @@ Thực tế nên hạn chế việc xóa data mà thêm 1 trường đánh dấu
 
 
 
+# View
+View lưu câu lệnh SQL, có thể hạn chế người dùng truy cập vào DB mà phải thông qua view cho an toàn. Thực ra nó cũng thế lệnh view vào SQL gốc thôi => ít dùng
+K nên update data trên view vì nó có ảnh hưởng tới bảng gốc, bị rối.
+
+Các loại view:
+- Virtual view (mặc định): chỉ là query thuần, nó coi như chỉ lưu câu lệnh và phải exec lại
+- Indexed view: là view mà có thể tạo chỉ mục, nó được lưu trữ riêng trong bộ nhớ như 1 bảng để truy vấn nhanh hơn. Nó tự động update khi bảng gốc có update, khiến update bảng gốc bị lâu hơn, nhưng đọc sẽ nhanh.
+- Marterizalized view: thực sự là 1 bảng và được stored trong bộ nhớ vật lý. Nó khác indexed view ở chỗ không tự động cập nhật data mà ta phải tự làm, có 2 cách: periodic reconstruction là refresh định kỳ, hoặc viết trigger là thực hiện lệnh gì khi có điều kiện hành động update xảy ra.
+- Partitioned view: là view kết hợp data từ nhiều server khác nhau, nếu nó join member table trong cùng 1 instance SQL server thì gọi là local partitioned view. Bản chất nó tập hợp query và gửi request đến từng bảng gốc thôi.
+- System view: view có sẵn trong system, cung metadata cho db. VD: SELECT * FROM INFORMATION_SCHEMA.TABLES => xem các view của 1 database
+
+-> Tạo indexed view trong SQL Server: tạo view bth với WITH SCHEMABINDING option sẽ bind view vào schema của table gốc -> đánh index tuỳ ý cho view như với bảng.
+Nếu đổi cấu trúc của table gốc thì phải drop indexed view trước mới được.
+SET STATISTICS IO ON sẽ giúp xem được chi tiết tốc độ câu query. SSMS có sẵn nút display estimated execution plan giúp xem hiệu suất. 
+
+
+
 # Backup database
 Data file trong SQL gồm tệp chính (*.mdf) chứa dữ liệu khởi đầu, tệp thứ cấp (*.ndf) chứa dữ liệu phát sinh và nhật ký thao tác (*.ldf) dùng để khôi phục db khi sự cố
 
-Backup FULL sẽ lưu 1 bản copy full db tại thời điểm đó vào 1 file
-Backup WITH DIFFERENTIAL sẽ lưu backup khác gì so với lần full backup gần nhất. Phải đã từng backup full r.
-
 - SSMS: Rightclick database -> tasks
 - Backup bằng SQL tránh TH k có permission:
-BACKUP DATABASE DBName TO DISK = 'C:\Backup\TenDatabase.bak' WITH FORMAT, INIT, NAME = 'Full Backup of DBName';
+VD backup full vào file: BACKUP DATABASE DBName TO DISK = 'C:\Backup\TenDatabase.bak' WITH FORMAT, INIT, NAME = 'Full Backup of DBName';
+Có thể backup WITH DIFFERENTIAL sẽ lưu backup khác gì so với lần full backup gần nhất. Phải đã từng backup full r.
 => Nếu phiên bản k hỗ trợ phải tìm cách khác.
 
 
 
 //!!!!!!
-# View
-View lưu câu lệnh SQL, có thể hạn chế người dùng truy cập vào DB mà phải thông qua view cho an toàn. Bản chất SQL cũng thế lệnh SQL vào Select * FROM <view> thôi
-Update data trên view có ảnh hưởng tới bảng gốc nó ref tới => chỉ nên dùng để read
-- Virtual view (mặc định): chỉ là query thuần, nó coi như chỉ lưu câu lệnh và phải exec lại
-- Indexed view: là view mà có thể tạo chỉ mục, nó được lưu trữ riêng trong bộ nhớ như 1 bảng để truy vấn nhanh hơn. Quá trình ghi sẽ lâu hơn vì phải tự động cập nhật dữ liệu trên indexed view, nhưng khi đọc sẽ k cần execute lại query phức tạp nữa. 
-- Marterizalized view: thực sự là bảng và được stored trong bộ nhớ vật lý. Nó khác indexed view ở chỗ không tự động cập nhật data mà ta phải tự làm, có 2 cách: periodic reconstruction là refresh định kỳ, hoặc viết trigger là thực hiện lệnh gì khi có điều kiện hành động gì xảy ra.
-- Partitioned view: là view kết hợp data từ nhiều server khác nhau thành 1 table, nếu nó join member table trong cùng 1 instance SQL server thì gọi là local partitioned view
-- System view: view có sẵn trong system, cung metadata cho db. VD: SELECT * FROM INFORMATION_SCHEMA.TABLES => xem các view của 1 database
-
--> Để tạo indexed view: tạo view bth với WITH SCHEMABINDING option, sẽ bind view vào schema của table gốc. Nếu đổi cấu trúc của table gốc thì phải drop indexed view trước r mới được -> CREATE UNIQUE CLUSTERED INDEX vào trường nào của view, tức là tạo view và đánh index cho view thôi. Tương tự có thể tạo nonclustered index cho view
-SET STATISTICS IO ON sẽ giúp xem được chi tiết tốc độ câu query, mà chả cần vì trong SSMS có nút display estimated execution plan giúp xem hiệu suất. 
-
-
-
 # Dùng bảng tạm
 -> Temporary Table là table đặc biệt lưu tạm thời trên SQL Server, giúp sử dụng lại kết quả nhiều lần.
 Local Temp Table chỉ tồn tại trong 1 phiên làm việc, còn Global Temp Table có thể sử dụng trên nhiều phiên làm việc. 1 phiên làm việc là ktg 1 lần ta kết nối vào CSDL.
